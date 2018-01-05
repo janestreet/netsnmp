@@ -1,0 +1,25 @@
+opam-version: "1.2"
+maintainer: "opensource@janestreet.com"
+authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
+homepage: "https://github.com/janestreet/netsnmp"
+bug-reports: "https://github.com/janestreet/netsnmp/issues"
+dev-repo: "git+https://github.com/janestreet/netsnmp.git"
+license: "Apache-2.0"
+build: [
+  ["jbuilder" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "async"
+  "core"
+  "ppx_driver"
+  "ppx_jane"
+  "jbuilder"                {build & >= "1.0+beta12"}
+  "ocaml-migrate-parsetree" {>= "0.4"}
+]
+available: [ ocaml-version >= "4.04.1" ]
+descr: "
+An interface to the Net-SNMP client library
+
+Provides a wrapper around the Net-SNMP client libraries including
+MIB handling and SNMP requests
+"

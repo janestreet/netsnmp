@@ -1,0 +1,8 @@
+(library
+ ((name netsnmp)
+  (public_name netsnmp)
+  (libraries (str netsnmp_raw_monad ))
+  (preprocess (pps (ppx_jane ppx_driver.runner)))
+  ))
+
+(jbuild_version 1)
