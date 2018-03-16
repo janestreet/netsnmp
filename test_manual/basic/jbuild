@@ -1,7 +1,7 @@
 (executables
  ((names (mib_test sess_test var_types netsnmp_test))
   (libraries (str netsnmp))
-  (preprocess (pps (ppx_jane ppx_driver.runner)))))
+  (preprocess (pps (ppx_jane ppxlib.runner)))))
 
 
 (jbuild_version 1)
