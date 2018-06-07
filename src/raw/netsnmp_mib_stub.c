@@ -135,7 +135,7 @@ CAMLprim value caml_read_objid(value v)
   {
     ml_objid = caml_alloc_string(anOID_len * (sizeof *anOID));
     ml_oib = caml_alloc(2, 0);
-    memmove(String_val(ml_objid), (char *)anOID, anOID_len * sizeof *anOID);
+    memmove(Bytes_val(ml_objid), (char *)anOID, anOID_len * sizeof *anOID);
     Store_field(ml_oib, 0, ml_objid);
     Store_field(ml_oib, 1, Val_int(anOID_len));
     CAMLreturn(ml_oib);
@@ -162,7 +162,7 @@ CAMLprim value caml_get_node(value v)
   {
     ml_objid = caml_alloc_string(anOID_len * (sizeof *anOID));
     ml_oib = caml_alloc(2, 0);
-    memmove(String_val(ml_objid), (char *)anOID, anOID_len * sizeof *anOID);
+    memmove(Bytes_val(ml_objid), (char *)anOID, anOID_len * sizeof *anOID);
     Store_field(ml_oib, 0, ml_objid);
     Store_field(ml_oib, 1, Val_int(anOID_len));
     CAMLreturn(ml_oib);
@@ -190,7 +190,7 @@ CAMLprim value caml_get_module_node(value vobjid, value vmodule)
   {
     ml_objid = caml_alloc_string(anOID_len * (sizeof *anOID));
     ml_oib = caml_alloc(2, 0);
-    memmove(String_val(ml_objid), (char *)anOID, anOID_len * sizeof *anOID);
+    memmove(Bytes_val(ml_objid), (char *)anOID, anOID_len * sizeof *anOID);
     Store_field(ml_oib, 0, ml_objid);
     Store_field(ml_oib, 1, Val_int(anOID_len));
     CAMLreturn(ml_oib);
@@ -276,7 +276,7 @@ CAMLprim value caml_snprint_objid(value ml_oid)
     buf = (char *)oom_realloc(buf, buflen);
   }
   caml_acquire_runtime_system();
-  
+
   ml_s = caml_copy_string(buf);
   free(buf);
   CAMLreturn(ml_s);
@@ -299,7 +299,7 @@ CAMLprim value caml_snprint_description(value ml_oid)
     buf = (char *)oom_realloc(buf, buflen);
   }
   caml_acquire_runtime_system();
-  
+
   ml_s = caml_copy_string(buf);
   free(buf);
   CAMLreturn(ml_s);

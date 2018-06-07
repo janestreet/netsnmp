@@ -4,7 +4,7 @@
 
 #define p_to_ml_value(p,mlv) \
   do { mlv = caml_alloc_string(sizeof (void *)); \
-  memmove(String_val(mlv), (char *)&p, sizeof (void *)); } while(0)
+  memmove(Bytes_val(mlv), (char *)&p, sizeof (void *)); } while(0)
 
 #define ml_value_to_p(mlv,p) \
   do { memmove((char *)&p, String_val(mlv), sizeof (void *)); } while(0)

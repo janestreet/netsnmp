@@ -56,6 +56,7 @@ CAMLprim value caml_snmp_sess_init(value unit __attribute__((unused)))
   CAMLlocal1(ml_session);
   netsnmp_session *session;
 
+
   ml_session = caml_alloc_string(sizeof *session);
   session = (netsnmp_session *)String_val(ml_session);
   caml_release_runtime_system();
@@ -71,7 +72,7 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
   CAMLlocal1(ml_session_handle);
   netsnmp_session *session;
   void *session_handle;
-  char *s;
+  const char *s;
 
  /* ml_session_cfg
   *
@@ -88,6 +89,7 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
   * ; securityAuthProto    : snmp_sec_auth_proto  [8]
   * ; securityAuthPassword : string               [9]
   */
+
   session = (netsnmp_session *)String_val(ml_session);
   session->version = ml_snmp_version_to_c(Int_val(Field(ml_session_cfg,0)));
 
@@ -97,11 +99,11 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
   if (Int_val(Field(ml_session_cfg,2)) > 0)
     session->timeout = Int_val(Field(ml_session_cfg,2));
 
-  session->peername = String_val(Field(ml_session_cfg,3));
+  session->peername = (char *) String_val(Field(ml_session_cfg,3));
 
   s = String_val(Field(ml_session_cfg,4));
   if (strlen(s) == 0 || (strlen(s) == 1 && strcmp(s, "0")))
-    session->localname = String_val(Field(ml_session_cfg,4));
+    session->localname = (char *) String_val(Field(ml_session_cfg,4));
 
   if (Int_val(Field(ml_session_cfg,5)) > 0)
     session->local_port = Int_val(Field(ml_session_cfg,5));
@@ -114,7 +116,7 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
       session->community_len = strlen((const char *)session->community);
       break;
     case SNMP_VERSION_3:
-      session->securityName = String_val(Field(ml_session_cfg,7));
+      session->securityName = (char *) String_val(Field(ml_session_cfg,7));
       session->securityNameLen = strlen(session->securityName);
       switch (ml_snmp_sec_auth_proto_to_c(Field(ml_session_cfg,8)))
       {
@@ -234,7 +236,7 @@ static value oid_value_data_string(int tag, char *strval, int str_len)
 
   ml_res = caml_alloc(1, tag);
   ml_str = caml_alloc_string(str_len);
-  memmove(String_val(ml_str), strval, str_len);
+  memmove(Bytes_val(ml_str), strval, str_len);
   Store_field(ml_res, 0, ml_str);
 
   CAMLreturn(ml_res);
@@ -246,7 +248,7 @@ static value oid_value_data_oid(int tag, oid *oidval, int oid_len)
   CAMLlocal3(ml_res, ml_oid, ml_objid);
 
   ml_objid = caml_alloc_string(oid_len * (sizeof *oidval));
-  memmove(String_val(ml_objid), (char *)oidval, oid_len * (sizeof *oidval));
+  memmove(Bytes_val(ml_objid), (char *)oidval, oid_len * (sizeof *oidval));
   ml_oid = caml_alloc(2, 0);
   Store_field(ml_oid, 0, ml_objid);
   Store_field(ml_oid, 1, Val_int(oid_len));
@@ -397,7 +399,7 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
          else
            ml_node_value = oid_value_error(0, var->type);
          break;
-        
+
        case ASN_OPAQUE_DOUBLE:
          if (var->val.doubleVal)
            ml_node_value = oid_value_data_double(16, *var->val.doubleVal);
@@ -405,7 +407,7 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
            ml_node_value = oid_value_error(0, var->type);
          break;
     #endif
-        
+
        case SNMP_NOSUCHOBJECT:
        case SNMP_NOSUCHINSTANCE:
        case SNMP_ENDOFMIBVIEW:
@@ -416,7 +418,7 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
       }
 
       ml_objid = caml_alloc_string(var->name_length * (sizeof *(var->name)));
-      memmove(String_val(ml_objid), (char *)var->name, var->name_length * (sizeof *(var->name)));
+      memmove(Bytes_val(ml_objid), (char *)var->name, var->name_length * (sizeof *(var->name)));
       ml_oid = caml_alloc(2, 0);
       Store_field(ml_oid, 0, ml_objid);
       Store_field(ml_oid, 1, Val_int(var->name_length));

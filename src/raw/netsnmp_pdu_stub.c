@@ -120,7 +120,7 @@ static struct counter64 asn_counter64_of_value(value ml_value)
   low = Field(ml_value, 1);
 
   c64.high = high; c64.low = low;
-  
+
   return c64;
 }
 
@@ -128,7 +128,7 @@ static netsnmp_variable_list *local_snmp_pdu_add_variable(netsnmp_pdu *pdu,
   const oid * name, size_t name_length, u_char type, const void * value, size_t len)
 {
   netsnmp_variable_list *ret;
-  
+
   caml_release_runtime_system();
   ret = snmp_pdu_add_variable_mutex(pdu, name, name_length, type, value, len);
   caml_acquire_runtime_system();
@@ -148,7 +148,7 @@ CAMLprim value caml_snmp_add_variable(value ml_pdu, value ml_oid, value ml_value
   int stype;
   int i;
   uint u;
-  char *s, *sip;
+  const char *s, *sip;
   int64_t i64;
   struct counter64 c64;
   u_char ip[4];
