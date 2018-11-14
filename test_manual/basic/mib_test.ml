@@ -11,8 +11,8 @@ let add_mib_paths paths =
 ;;
 
 let oid_module oidstr =
-  let re = Str.regexp ":+" in
-    match Str.split re oidstr with
+  let re = Re.(compile (rep1 (char ':'))) in
+  match Re.split re oidstr with
     | oidm::_::_ -> Some oidm
     | _ -> None
 ;;

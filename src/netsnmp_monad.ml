@@ -44,9 +44,9 @@ module Netsnmp(IO : IO) : Netsnmp_intf.S with module IO := IO = struct
         return ()
 
     let oid_module =
-      let re = Str.regexp ":+" in
+      let re = Re.(compile (rep1 (char ':'))) in
       fun oidstr ->
-        match Str.split re oidstr with
+        match Re.split re oidstr with
         | oidm::_::_ -> Some oidm
         | _ -> None
     ;;
