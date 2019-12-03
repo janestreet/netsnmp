@@ -15,7 +15,7 @@ depends: [
   "core"
   "ppx_jane"
   "conf-netsnmp" {>= "1.0.0"}
-  "dune"         {>= "1.5.1"}
+  "dune"         {>= "2.0.0"}
   "re"           {>= "1.8.0"}
 ]
 synopsis: "An interface to the Net-SNMP client library"
