@@ -5,11 +5,8 @@ module type S = sig
 
   include module type of (struct include Session end)
 
-  val snmp_sess_init : unit -> netsnmp_session IO.t
-
   val snmp_sess_open
-     : netsnmp_session:netsnmp_session
-    -> version:Snmp_version.t
+    :  version:Snmp_version.t
     -> retries:int
     -> timeout:int
     -> peername:string

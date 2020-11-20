@@ -50,25 +50,41 @@ static int ml_snmp_sec_auth_proto_to_c(int v)
   }
 }
 
+#define Sess_val(v) (*((netsnmp_session **)Data_custom_val(v)))
+
+static value alloc_sess(netsnmp_session * session)
+{
+  value v = caml_alloc(1, Abstract_tag);
+  Sess_val(v) = session;
+  return v;
+}
+
 CAMLprim value caml_snmp_sess_init(value unit __attribute__((unused)))
 {
   CAMLparam0();
   CAMLlocal1(ml_session);
-  netsnmp_session *session;
+  netsnmp_session *session = (netsnmp_session *)malloc(sizeof(netsnmp_session));
+  if (session == NULL) oom_error();
 
-
-  ml_session = caml_alloc_string(sizeof *session);
-  session = (netsnmp_session *)String_val(ml_session);
   caml_release_runtime_system();
   snmp_sess_init_mutex(session);
   caml_acquire_runtime_system();
 
-  CAMLreturn(ml_session);
+  CAMLreturn(alloc_sess(session));
 }
 
-CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
+void free_session(netsnmp_session *session)
 {
-  CAMLparam2(ml_session, ml_session_cfg);
+  if (NULL != session->peername) free(session->peername);
+  if (NULL != session->localname) free(session->localname);
+  if (NULL != session->community) free(session->community);
+  if (NULL != session->securityName) free(session->securityName);
+  free(session);
+}
+
+CAMLprim value caml_snmp_sess_open(value ml_session_cfg)
+{
+  CAMLparam1(ml_session_cfg);
   CAMLlocal1(ml_session_handle);
   netsnmp_session *session;
   void *session_handle;
@@ -90,7 +106,13 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
   * ; securityAuthPassword : string               [9]
   */
 
-  session = (netsnmp_session *)String_val(ml_session);
+  session = (netsnmp_session *)malloc(sizeof(netsnmp_session));
+  if (session == NULL) oom_error();
+
+  caml_release_runtime_system();
+  snmp_sess_init_mutex(session);
+  caml_acquire_runtime_system();
+
   session->version = ml_snmp_version_to_c(Int_val(Field(ml_session_cfg,0)));
 
   if (Int_val(Field(ml_session_cfg,1)) > 0)
@@ -99,11 +121,15 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
   if (Int_val(Field(ml_session_cfg,2)) > 0)
     session->timeout = Int_val(Field(ml_session_cfg,2));
 
-  session->peername = (char *) String_val(Field(ml_session_cfg,3));
+  session->peername = strdup(String_val(Field(ml_session_cfg,3)));
+  if (session->peername == NULL) oom_error();
 
   s = String_val(Field(ml_session_cfg,4));
-  if (strlen(s) == 0 || (strlen(s) == 1 && strcmp(s, "0")))
-    session->localname = (char *) String_val(Field(ml_session_cfg,4));
+  if (!(strlen(s) == 0 || (strlen(s) == 1 && strcmp(s, "0"))))
+  {
+    session->localname = strdup(String_val(Field(ml_session_cfg,4)));
+    if (session->localname == NULL) oom_error();
+  }
 
   if (Int_val(Field(ml_session_cfg,5)) > 0)
     session->local_port = Int_val(Field(ml_session_cfg,5));
@@ -112,11 +138,13 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
   {
     case SNMP_VERSION_1:
     case SNMP_VERSION_2c:
-      session->community = (u_char *)String_val(Field(ml_session_cfg,6));
+      session->community = (u_char *)strdup(String_val(Field(ml_session_cfg,6)));
+      if (session->community == NULL) oom_error();
       session->community_len = strlen((const char *)session->community);
       break;
     case SNMP_VERSION_3:
-      session->securityName = (char *) String_val(Field(ml_session_cfg,7));
+      session->securityName = strdup(String_val(Field(ml_session_cfg,7)));
+      if (session->securityName == NULL) oom_error();
       session->securityNameLen = strlen(session->securityName);
       switch (ml_snmp_sec_auth_proto_to_c(Field(ml_session_cfg,8)))
       {
@@ -131,18 +159,25 @@ CAMLprim value caml_snmp_sess_open(value ml_session, value ml_session_cfg)
                           (u_char *) s, strlen(s),
                           session->securityAuthKey,
                           &session->securityAuthKeyLen) != SNMPERR_SUCCESS) {
+            free_session(session);
             caml_failwith("failed to generate Ku from auth pass phrase");
           }
           break;
-        default: caml_failwith("unknown version 3 securityAuthProto");
+        default:
+          free_session(session);
+          caml_failwith("unknown version 3 securityAuthProto");
       }
       break;
-    default: caml_failwith("unknown snmp version when creating session");
+    default:
+      free_session(session);
+      caml_failwith("unknown snmp version when creating session");
   }
   caml_release_runtime_system();
   SOCK_STARTUP;
   session_handle = snmp_sess_open_mt( session );
   caml_acquire_runtime_system();
+
+  free_session(session);
 
   if (!session_handle)
   {
@@ -300,13 +335,21 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
 
   ml_values = Val_emptylist;
   ml_value_to_p(ml_handle, handle);
-  ppdu = (netsnmp_pdu **)Data_custom_val(ml_pdu);
+
+  ppdu = (netsnmp_pdu **) Data_custom_val(ml_pdu);
+  // We must dereference while we have the runtime lock
+  // otherwise, ppdu may be moved while we don't have the lock.
+  // Also, the session takes ownership of the pdu's memory
+  // at this point, so we should NULL the pointer so the pdu finalizer
+  // won't double-free. In particular, it's important that we do this
+  // *before* releasing the runtime lock, as the GC could run while we
+  // don't have the lock.
   pdu = *ppdu;
+  *ppdu = NULL;
 
   caml_release_runtime_system();
   status = snmp_sess_synch_response_mt(handle, pdu, &response);
   caml_acquire_runtime_system();
-  *ppdu = NULL;
 
   if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
   {

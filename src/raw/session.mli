@@ -3,7 +3,8 @@
 *)
 
 type t
-type netsnmp_session
+
+val session_id : t -> int
 
 (** Supported SNMP versions
 *)
@@ -22,12 +23,6 @@ module Snmp_sec_auth_proto : sig
    | UsmHMACMD5AuthProtocol
 end
 
-(** [snmp_sess_init] - create a netsnmp session ready to open. This function is
-    not thread safe as it loads and parses mibs especially on the first call.
-    The value returned can be discarded once used to open the session with
-    snmp_sess_open.  *)
-val snmp_sess_init : unit -> netsnmp_session
-
 (** [snmp_sess_open] creates a session between the client and host and returns a handle.
     Raises [Failure] if the C API fails.  The parameters are as follows:
 - [netsnmp_session - the value returned from snmp_sess_init
@@ -43,8 +38,7 @@ val snmp_sess_init : unit -> netsnmp_session
 - [securityAuthPassword] - V3 password, will be converted to securityAuthKey
     *)
 val snmp_sess_open
-   : netsnmp_session:netsnmp_session
-  -> version:Snmp_version.t
+  :  version:Snmp_version.t
   -> retries:int
   -> timeout:int
   -> peername:string

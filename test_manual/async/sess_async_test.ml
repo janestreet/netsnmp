@@ -16,10 +16,8 @@ let run hostname community =
   let add_oid oids pdu = Mib.get_node oids >>= Raw.Pdu.snmp_add_null_var pdu in
   Mib.netsnmp_init_mib ()
   >>= fun () ->
-  Raw.Session.snmp_sess_init ()
-  >>= fun netsnmp_session ->
   Raw.Session.snmp_sess_open
-    ~netsnmp_session ~version ~retries ~timeout ~peername ~localname ~local_port
+    ~version ~retries ~timeout ~peername ~localname ~local_port
     ~community ~securityName ~securityAuthProto ~securityAuthPassword ()
   >>= fun sess ->
   Raw.Pdu.snmp_pdu_create Raw.Pdu.Pdu_type.Get

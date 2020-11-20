@@ -32,16 +32,15 @@ module Netsnmp(IO : IO) : Netsnmp_intf.S with module IO := IO = struct
 
     (** Track the mibs that have been loaded *)
     let loaded_mibs = ref []
-    let initialised = ref false
+    let initialised = ref None
 
     let check_init () =
       match !initialised with
-      | true -> return ()
-      | false ->
-        Mib.netsnmp_init_mib ()
-        >>= fun () ->
-        initialised := true;
-        return ()
+      | Some io -> io
+      | None ->
+        let io = Mib.netsnmp_init_mib () in
+        initialised := Some io;
+        io
 
     let oid_module =
       let re = Re.(compile (rep1 (char ':'))) in
@@ -110,10 +109,8 @@ module Netsnmp(IO : IO) : Netsnmp_intf.S with module IO := IO = struct
         | Version_3 auth  ->
           ("", auth.securityName, auth.securityAuthProto, auth.securityAuthPassword)
       in
-      Session.snmp_sess_init ()
-      >>= fun netsnmp_session ->
       Session.snmp_sess_open
-        ~netsnmp_session ~version ~retries ~timeout ~peername ~localname ~local_port
+        ~version ~retries ~timeout ~peername ~localname ~local_port
         ~community ~securityName ~securityAuthProto ~securityAuthPassword ()
       >>= fun session ->
       let t = {

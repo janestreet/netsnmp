@@ -20,10 +20,10 @@ let run hostname community =
   let securityName = "" in
   let securityAuthProto = Session.Snmp_sec_auth_proto.Ignore in
   let securityAuthPassword = "" in
-  let netsnmp_session = Session.snmp_sess_init () in
-  let sess = Session.snmp_sess_open
-    ~netsnmp_session ~version ~retries ~timeout ~peername ~localname ~local_port
-    ~community ~securityName ~securityAuthProto ~securityAuthPassword ()
+  let sess =
+    Session.snmp_sess_open
+      ~version ~retries ~timeout ~peername ~localname ~local_port
+      ~community ~securityName ~securityAuthProto ~securityAuthPassword ()
   in
   let pdu = Pdu.snmp_pdu_create Pdu.Pdu_type.Get in
   let () = Mib.netsnmp_init_mib () in

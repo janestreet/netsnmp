@@ -46,12 +46,14 @@ int ml_pdu_type_to_c(int ml_type)
 
 static void pdu_finalize(value ml_value)
 {
-  netsnmp_pdu **ppdu;
+  netsnmp_pdu *pdu, **ppdu;
 
   ppdu = (netsnmp_pdu **)Data_custom_val(ml_value);
-  if (*ppdu != NULL)
+  pdu = *ppdu;
+
+  if (pdu != NULL)
   {
-    snmp_free_pdu_mutex(*ppdu);
+    snmp_free_pdu_mutex(pdu);
     *ppdu = NULL;
   }
 }
@@ -69,22 +71,27 @@ static struct custom_operations pdu_custom_ops = {
 #endif
 };
 
+#define Pdu_val(v) (*((netsnmp_pdu **)Data_custom_val(v)))
+
+static value alloc_pdu(netsnmp_pdu *pdu)
+{
+  value v = caml_alloc_custom(&pdu_custom_ops, sizeof(netsnmp_pdu *), 0, 1);
+  Pdu_val(v) = pdu;
+  return v;
+}
+
 CAMLprim value caml_snmp_pdu_create(value ml_pdu_type)
 {
   CAMLparam1(ml_pdu_type);
   CAMLlocal1(ml_netsnmp_pdu);
-  netsnmp_pdu *pdu, **ppdu;
+  netsnmp_pdu *pdu;
   int pdu_type = ml_pdu_type_to_c(Int_val(ml_pdu_type));
 
   caml_release_runtime_system();
   pdu = snmp_pdu_create_mutex(pdu_type);
   caml_acquire_runtime_system();
 
-  ml_netsnmp_pdu = caml_alloc_custom(&pdu_custom_ops, sizeof pdu, 0, 1);
-  ppdu = (netsnmp_pdu **)Data_custom_val(ml_netsnmp_pdu);
-  *ppdu = pdu;
-
-  CAMLreturn(ml_netsnmp_pdu);
+  CAMLreturn(alloc_pdu(pdu));
 }
 
 CAMLprim value caml_snmp_add_null_var(value ml_pdu, value ml_oid)
@@ -94,7 +101,7 @@ CAMLprim value caml_snmp_add_null_var(value ml_pdu, value ml_oid)
   int objid_len = Int_val(Field(ml_oid, 1));
   netsnmp_pdu *pdu;
 
-  pdu = *((netsnmp_pdu **)Data_custom_val(ml_pdu));
+  pdu = Pdu_val(ml_pdu);
   snmp_add_null_var_mutex(pdu, objid, objid_len);
   CAMLreturn(ml_pdu);
 }
@@ -127,7 +134,7 @@ static struct counter64 asn_counter64_of_value(value ml_value)
   return c64;
 }
 
-static netsnmp_variable_list *local_snmp_pdu_add_variable(netsnmp_pdu *pdu,
+static netsnmp_variable_list *local_snmp_pdu_add_variable_release_runtime(netsnmp_pdu *pdu,
   const oid * name, size_t name_length, u_char type, const void * value, size_t len)
 {
   netsnmp_variable_list *ret;
@@ -143,7 +150,8 @@ CAMLprim value caml_snmp_add_variable(value ml_pdu, value ml_oid, value ml_value
 {
   CAMLparam0();
   value ml_v;
-  oid *objid = (oid *)String_val(Field(ml_oid, 0));
+  oid *objid = (oid *)strdup(String_val(Field(ml_oid, 0)));
+  if (objid == NULL) oom_error();
   int objid_len = Int_val(Field(ml_oid, 1));
   netsnmp_pdu *pdu;
   oid *vobjid;
@@ -151,14 +159,15 @@ CAMLprim value caml_snmp_add_variable(value ml_pdu, value ml_oid, value ml_value
   int stype;
   int i;
   uint u;
-  const char *s, *sip;
+  char *s;
+  const char *sip;
   int64_t i64;
   struct counter64 c64;
   u_char ip[4];
   double d;
   float f;
 
-  pdu = *((netsnmp_pdu **)Data_custom_val(ml_pdu));
+  pdu = Pdu_val(ml_pdu);
 
   /*
   type ASN1_value =
@@ -190,42 +199,46 @@ CAMLprim value caml_snmp_add_variable(value ml_pdu, value ml_oid, value ml_value
     {
       case 0:
         stype = value_error_to_type(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, stype, NULL, 0);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, stype, NULL, 0);
         break;
 
       case 1:
         i = Int_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_INTEGER, &i, sizeof i);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_INTEGER, &i, sizeof i);
         break;
 
       case 2:
         u = (uint)Int_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_GAUGE, &u, sizeof u);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_GAUGE, &u, sizeof u);
         break;
 
       case 3:
         u = (uint)Int_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_COUNTER, &u, sizeof u);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_COUNTER, &u, sizeof u);
         break;
 
       case 4:
         u = (uint)Int_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_TIMETICKS, &u, sizeof u);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_TIMETICKS, &u, sizeof u);
         break;
 
       case 5:
         u = (uint)Int_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_UINTEGER, &u, sizeof u);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_UINTEGER, &u, sizeof u);
         break;
 
       case 6:
-        s = String_val(ml_v);  i = caml_string_length(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OCTET_STR, s, i);
+        s = strdup(String_val(ml_v));  i = caml_string_length(ml_v);
+        if (s == NULL) oom_error();
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OCTET_STR, s, i);
+        free(s);
         break;
 
       case 7:
-        s = String_val(ml_v);  i = caml_string_length(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OPAQUE, s, i);
+        s = strdup(String_val(ml_v));  i = caml_string_length(ml_v);
+        if (s == NULL) oom_error();
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OPAQUE, s, i);
+        free(s);
         break;
 
       case 8:
@@ -236,50 +249,54 @@ CAMLprim value caml_snmp_add_variable(value ml_pdu, value ml_oid, value ml_value
           if ((s = strchr(sip, '.')) != NULL) sip = s + 1;
           else sip = sip + strlen(sip);
         }
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_IPADDRESS, ip, sizeof ip);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_IPADDRESS, ip, sizeof ip);
         break;
 
       case 9:
-        vobjid = (oid *)String_val(Field(ml_value, 0));
+        vobjid = (oid *)strdup(String_val(Field(ml_value, 0)));
+        if (vobjid == NULL) oom_error();
         vobjid_len = Int_val(Field(ml_value, 1));
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OBJECT_ID, vobjid, vobjid_len * sizeof(oid));
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OBJECT_ID, vobjid, vobjid_len * sizeof(oid));
+        free(vobjid);
         break;
 
       case 10:
         c64 = asn_counter64_of_value(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_COUNTER64, &c64, sizeof c64);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_COUNTER64, &c64, sizeof c64);
         break;
 
       case 11:
-        s = String_val(ml_v);  i = caml_string_length(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_BIT_STR, s, i);
+        s = strdup(String_val(ml_v));  i = caml_string_length(ml_v);
+        if (s == NULL) oom_error();
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_BIT_STR, s, i);
+        free(s);
         break;
 
       case 12:
         c64 = asn_counter64_of_value(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OPAQUE_COUNTER64, &c64, sizeof c64);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OPAQUE_COUNTER64, &c64, sizeof c64);
         break;
 
       case 13:
         c64 = asn_counter64_of_value(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OPAQUE_U64, &c64, sizeof c64);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OPAQUE_U64, &c64, sizeof c64);
         break;
 
       case 14:
         i64 = Int64_val(ml_v);
         c64.high = (((uint64_t)i64) >> 32) & ((uint)~0);
         c64.low = ((uint64_t)i64) & ((uint)~0);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OPAQUE_I64, &c64, sizeof c64);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OPAQUE_I64, &c64, sizeof c64);
         break;
 
       case 15:
         f = (float)Double_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OPAQUE_FLOAT, &f, sizeof f);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OPAQUE_FLOAT, &f, sizeof f);
         break;
 
       case 16:
         d = Double_val(ml_v);
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_OPAQUE_DOUBLE, &d, sizeof d);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_OPAQUE_DOUBLE, &d, sizeof d);
         break;
 
       default:
@@ -292,9 +309,10 @@ CAMLprim value caml_snmp_add_variable(value ml_pdu, value ml_oid, value ml_value
     switch (Int_val(ml_value))
     {
       case 0:
-        local_snmp_pdu_add_variable(pdu, objid, objid_len, ASN_NULL, NULL, 0);
+        local_snmp_pdu_add_variable_release_runtime(pdu, objid, objid_len, ASN_NULL, NULL, 0);
         break;
     }
   }
+  free(objid);
   CAMLreturn(ml_pdu);
 }

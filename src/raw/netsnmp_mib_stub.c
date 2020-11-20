@@ -38,33 +38,44 @@ CAMLprim value caml_shutdown_mib(value unit __attribute__((unused)))
 
 CAMLprim value caml_add_mibdir(value v)
 {
-  const char *dirname = String_val(v);
+  char *dirname = strdup(String_val(v));
+  if (dirname == NULL) oom_error();
   int res;
 
   caml_release_runtime_system();
   res = add_mibdir_mutex(dirname);
   caml_acquire_runtime_system();
 
+  free(dirname);
+
   return Val_int(res);
 }
 
 CAMLprim value caml_netsnmp_read_module(value v)
 {
-  const char *name = String_val(v);
+  char *name = strdup(String_val(v));
+  if (name == NULL) oom_error();
 
   caml_release_runtime_system();
   netsnmp_read_module_mutex(name);
   caml_acquire_runtime_system();
+
+  free(name);
+
   return Val_unit;
 }
 
 CAMLprim value caml_read_mib(value v)
 {
-  const char *filename = String_val(v);
+  char *filename = strdup(String_val(v));
+  if (filename == NULL) oom_error();
 
   caml_release_runtime_system();
   read_mib_mutex(filename);
   caml_acquire_runtime_system();
+
+  free(filename);
+
   return Val_unit;
 }
 
@@ -79,16 +90,28 @@ CAMLprim value caml_read_all_mibs(value unit __attribute__((unused)))
 CAMLprim value caml_add_module_replacement(
   value vold_module, value vnew_module, value vtag, value vlen)
 {
-  const char *old_module = String_val(vold_module);
-  const char *new_module = String_val(vnew_module);
-  const char *tag = String_val(vtag);
+  char *old_module = strdup(String_val(vold_module));
+  if (old_module == NULL) oom_error();
+  char *new_module = strdup(String_val(vnew_module));
+  if (new_module == NULL) oom_error();
+  char *tag = strdup(String_val(vtag));
+  if (tag == NULL) oom_error();
   int len = Int_val(vlen);
 
-  if (strlen(tag) == 0) tag = NULL;
+  if (strlen(tag) == 0)
+  {
+    free(tag);
+    tag = NULL;
+  }
 
   caml_release_runtime_system();
   add_module_replacement_mutex(old_module, new_module, tag, len);
   caml_acquire_runtime_system();
+
+  free(old_module);
+  free(new_module);
+  if (tag) free(tag);
+
   return Val_unit;
 }
 
@@ -123,13 +146,16 @@ CAMLprim value caml_read_objid(value v)
   CAMLlocal2(ml_oib, ml_objid);
   oid anOID[MAX_OID_LEN];
   size_t anOID_len;
-  const char *input = String_val(v);
+  char *input = strdup(String_val(v));
+  if (input == NULL) oom_error();
   int ret;
 
   anOID_len = MAX_OID_LEN;
   caml_release_runtime_system();
   ret = read_objid_mutex(input, anOID, &anOID_len);
   caml_acquire_runtime_system();
+
+  free(input);
 
   if (ret == 1)
   {
@@ -150,13 +176,16 @@ CAMLprim value caml_get_node(value v)
   CAMLlocal2(ml_oib, ml_objid);
   oid anOID[MAX_OID_LEN];
   size_t anOID_len;
-  const char *input = String_val(v);
+  char *input = strdup(String_val(v));
+  if (input == NULL) oom_error();
   int ret;
 
   anOID_len = MAX_OID_LEN;
   caml_release_runtime_system();
   ret = get_node_mutex(input, anOID, &anOID_len);
   caml_acquire_runtime_system();
+
+  free(input);
 
   if (ret == 1)
   {
@@ -177,14 +206,19 @@ CAMLprim value caml_get_module_node(value vobjid, value vmodule)
   CAMLlocal2(ml_oib, ml_objid);
   oid anOID[MAX_OID_LEN];
   size_t anOID_len;
-  const char *objid = String_val(vobjid);
-  const char *module = String_val(vmodule);
+  char *objid = strdup(String_val(vobjid));
+  if (objid == NULL) oom_error();
+  char *module = strdup(String_val(vmodule));
+  if (module == NULL) oom_error();
   int ret;
 
   anOID_len = MAX_OID_LEN;
   caml_release_runtime_system();
   ret = get_module_node_mutex(objid, module, anOID, &anOID_len);
   caml_acquire_runtime_system();
+
+  free(objid);
+  free(module);
 
   if (ret == 1)
   {
@@ -230,7 +264,8 @@ CAMLprim value caml_print_mib(value vfd)
 CAMLprim value caml_fprint_objid(value vfd, value ml_oid)
 {
   int fd = Int_val(vfd);
-  oid *objid = (oid *)String_val(Field(ml_oid, 0));
+  oid *objid = (oid *)strdup(String_val(Field(ml_oid, 0)));
+  if (objid == NULL) oom_error();
   int objid_len = Int_val(Field(ml_oid, 1));
   FILE *fp;
 
@@ -239,6 +274,8 @@ CAMLprim value caml_fprint_objid(value vfd, value ml_oid)
   fprint_objid_mutex(fp, objid, objid_len);
   caml_acquire_runtime_system();
   fclose(fp);
+
+  free(objid);
 
   return Val_unit;
 }
@@ -263,7 +300,8 @@ CAMLprim value caml_snprint_objid(value ml_oid)
 {
   CAMLparam1(ml_oid);
   CAMLlocal1(ml_s);
-  oid *objid = (oid *)String_val(Field(ml_oid, 0));
+  oid *objid = (oid *)strdup(String_val(Field(ml_oid, 0)));
+  if (objid == NULL) oom_error();
   int objid_len = Int_val(Field(ml_oid, 1));
   int buflen = 256;
   char *buf = (char *)malloc(buflen);
@@ -279,6 +317,7 @@ CAMLprim value caml_snprint_objid(value ml_oid)
 
   ml_s = caml_copy_string(buf);
   free(buf);
+  free(objid);
   CAMLreturn(ml_s);
 }
 
@@ -286,7 +325,8 @@ CAMLprim value caml_snprint_description(value ml_oid)
 {
   CAMLparam1(ml_oid);
   CAMLlocal1(ml_s);
-  oid *objid = (oid *)String_val(Field(ml_oid, 0));
+  oid *objid = (oid *)strdup(String_val(Field(ml_oid, 0)));
+  if (objid == NULL) oom_error();
   int objid_len = Int_val(Field(ml_oid, 1));
   int buflen = 1024;
   char *buf = (char *)malloc(buflen);
@@ -302,6 +342,7 @@ CAMLprim value caml_snprint_description(value ml_oid)
 
   ml_s = caml_copy_string(buf);
   free(buf);
+  free(objid);
   CAMLreturn(ml_s);
 }
 
