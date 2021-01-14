@@ -351,6 +351,15 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
   status = snmp_sess_synch_response_mt(handle, pdu, &response);
   caml_acquire_runtime_system();
 
+  // It happens occasionally that "response" will be NULL 
+  // despite "status" being STAT_SUCCESS (0). The official python and perl
+  // wrappers that use [snmp_sess_synch_response] do the following to deal 
+  // with it.
+  if (NULL == response && status == STAT_SUCCESS) 
+  {
+    status = STAT_ERROR;
+  }
+
   if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
   {
 
