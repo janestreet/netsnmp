@@ -47,4 +47,4 @@ let () =
       +> anon ("hostname" %: string)
     )
     (fun community hostname () -> run hostname community)
-  |> Command.run
+  |> Command_unix.run

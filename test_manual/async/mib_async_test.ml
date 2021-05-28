@@ -22,4 +22,4 @@ let () =
         ~doc:" include MIB descriptions"
     )
     (fun path save_descr () -> test path save_descr)
-  |> Command.run
+  |> Command_unix.run
