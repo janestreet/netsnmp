@@ -70,7 +70,7 @@ module Netsnmp(IO : IO) : Netsnmp_intf.S with module IO := IO = struct
         Mib.get_node oidstr
     ;;
 
-    let to_string oidstr = check_init () >>= fun () -> Mib.snprint_objid oidstr
+    let to_string oidval = check_init () >>= fun () -> Mib.snprint_objid oidval
   end
 
   module Connection = struct

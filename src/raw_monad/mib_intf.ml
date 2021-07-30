@@ -18,6 +18,8 @@ module type S = sig
   val snprint_objid : Oid.t -> string IO.t
   val snmp_set_mib_errors : int -> unit IO.t
   val snmp_set_mib_warnings : int -> unit IO.t
-  val snmp_set_save_descriptions : bool -> unit  IO.t
+  val snmp_set_save_descriptions : bool -> unit IO.t
   val add_module_replacement : string -> string -> string -> int -> unit IO.t
+  val objid_of_int_array : int array -> Oid.t IO.t
+  val objid_to_int_array : Oid.t -> int array IO.t
 end

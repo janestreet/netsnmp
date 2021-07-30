@@ -8,7 +8,6 @@ external shutdown_mib : unit -> unit = "caml_shutdown_mib"
 external add_mibdir_c : string -> int = "caml_add_mibdir"
 external read_objid : string -> Oid.t = "caml_read_objid"
 external get_node : string -> Oid.t = "caml_get_node"
-
 external get_module_node : string -> string -> Oid.t = "caml_get_module_node"
 external netsnmp_read_module : string -> unit = "caml_netsnmp_read_module"
 external read_mib : string -> unit = "caml_read_mib"
@@ -21,6 +20,8 @@ external snprint_description : Oid.t -> string = "caml_snprint_description"
 external snprint_objid : Oid.t -> string = "caml_snprint_objid"
 external snmp_set_save_descriptions : bool -> unit = "caml_snmp_set_save_descriptions"
 external add_module_replacement : string -> string -> string -> int -> unit = "caml_add_module_replacement"
+external objid_of_int_array : int array -> Oid.t = "caml_objid_of_int_array"
+external objid_to_int_array : Oid.t -> int array = "caml_objid_to_int_array"
 
 let print_mib ~fd () = print_mib_c ~fd
 

@@ -20,5 +20,7 @@ module Mib(IO : Io_intf.S) : Mib_intf.S with module IO := IO = struct
   let snmp_set_save_descriptions v = IO.wrap_main_thread Mib.snmp_set_save_descriptions v
   let add_module_replacement omod nmod tag len =
     IO.wrap_main_thread (Mib.add_module_replacement omod nmod tag) len
+  let objid_of_int_array oid_arry = IO.wrap_mt Mib.objid_of_int_array oid_arry
+  let objid_to_int_array oid = IO.wrap_mt Mib.objid_to_int_array oid
 
 end

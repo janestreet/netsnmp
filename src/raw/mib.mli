@@ -24,6 +24,12 @@ val read_objid : string -> Oid.t
     See get_module_node(3) for more details *)
 val get_node : string -> Oid.t
 
+(** [objid_of_int_array] builds an OID from an OCaml array of integers. *)
+val objid_of_int_array : int array -> Oid.t
+
+(** [objid_to_int_array] returns the integer values of an OID as an array. *)
+val objid_to_int_array : Oid.t -> int array
+
 (** [get_module_node] raises an [Netsnmp_exceptions.Not_found] exception on failure
     See get_module_node(3) for more details *)
 val get_module_node : string -> string -> Oid.t
