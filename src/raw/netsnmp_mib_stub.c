@@ -403,7 +403,7 @@ CAMLprim value caml_objid_to_int_array(value ml_oid)
 
   ml_ret = caml_alloc(objid_len, 0);
   for (int i = 0; i < objid_len; i++) {
-    Store_field(ml_ret, i, (int)anOID[i]);
+    Store_field(ml_ret, i, Val_int((int)anOID[i]));
   }
 
   CAMLreturn(ml_ret);
