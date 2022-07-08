@@ -21,8 +21,7 @@ void netsnmp_raise_ocaml_exception(const char *exn, value msg)
 
 void netsnmp_raise_ocaml_exception_system_error(const char *msg)
 {
-  CAMLparam0();
-  CAMLlocal1(exn_msg);
+  value exn_msg;
   int msglen = strlen(msg);
   int buflen = 256;
   char *buf = (char *)malloc(buflen + msglen + 1);
@@ -37,6 +36,7 @@ void netsnmp_raise_ocaml_exception_system_error(const char *msg)
     if (buf == NULL) oom_error();
   }
 
-  exn_msg = caml_copy_string(buf);  free(buf);
+  exn_msg = caml_copy_string(buf);
+  free(buf);
   netsnmp_raise_ocaml_exception("Netsnmp_error_system", exn_msg);
 }
