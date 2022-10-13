@@ -47,11 +47,11 @@ let wrap_new_thread f v =
   let thread_id =
     Netsnmp_raw_monad.Io_intf.With_thread_id.thread_id result_with_thread_id
   in
-  Int.Table.add_exn thread_table ~key:thread_id ~data:thread;
+  Hashtbl.add_exn thread_table ~key:thread_id ~data:thread;
   Netsnmp_raw_monad.Io_intf.With_thread_id.result result_with_thread_id
 
 let wrap ~thread_id f v =
-  let thread = Int.Table.find_exn thread_table thread_id in
+  let thread = Hashtbl.find_exn thread_table thread_id in
   In_thread.run ~thread (fun () -> f v)
 
 let wrap_mt f v = In_thread.run (fun () -> f v)
