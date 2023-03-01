@@ -24,7 +24,7 @@ let num_threads =
 
 let next_thread =
   Lazy_deferred.create (fun () ->
-    Deferred.Array.init
+    Deferred.Array.init ~how:(`Sequential)
       num_threads
       ~f:(fun i ->
         In_thread.Helper_thread.create ~name:(sprintf "netsnmp thread %i" i) ())

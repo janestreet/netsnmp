@@ -28,7 +28,7 @@ let run hostname community =
   >>= fun pdu ->
     printf "start list%!\n";
     Raw.Session.snmp_sess_synch_response sess pdu
-    >>= Deferred.List.iter ~f:(fun (oid, value) ->
+    >>= Deferred.List.iter ~how:(`Sequential) ~f:(fun (oid, value) ->
       Mib.snprint_objid oid
       >>= fun oid_s ->
       printf "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
@@ -46,5 +46,5 @@ let () =
       +> flag "-c" (required string) ~doc:"SNMP v2c community"
       +> anon ("hostname" %: string)
     )
-    (fun community hostname () -> run hostname community)
+    (fun community hostname () -> run hostname community) ~behave_nicely_in_pipeline:(false)
   |> Command_unix.run

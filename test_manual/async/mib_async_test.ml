@@ -3,7 +3,7 @@ open Async
 open Netsnmp_async
 
 let mibdirs paths = 
-  Deferred.List.iter paths ~f:(fun p -> 
+  Deferred.List.iter ~how:(`Sequential) paths ~f:(fun p -> 
     let%map num = Raw.Mib.add_mibdir p in printf "mibs(%s) = %d\n%!" p num)
 
 let test paths save_descr = 
@@ -21,5 +21,5 @@ let () =
       +> flag "-save-descr" no_arg
         ~doc:" include MIB descriptions"
     )
-    (fun path save_descr () -> test path save_descr)
+    (fun path save_descr () -> test path save_descr) ~behave_nicely_in_pipeline:(false)
   |> Command_unix.run
