@@ -2,7 +2,7 @@ module With_thread_id = struct
   type 'result t =
     { result : 'result
     ; thread_id : int
-    } [@@deriving fields]
+    } [@@deriving fields ~iterators:create]
 
   let create = Fields.create
 end

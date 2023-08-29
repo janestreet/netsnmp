@@ -3,7 +3,7 @@ type open_netsnmp_session
 type t =
   { session : open_netsnmp_session
   ; session_id : int
-  } [@@deriving fields]
+  } [@@deriving fields ~getters]
 
 module Snmp_version = struct
   type t =
