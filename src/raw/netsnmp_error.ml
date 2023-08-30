@@ -67,4 +67,5 @@ type t =
   | SNMPERR_KRB5
   | SNMPERR_PROTOCOL
   | SNMPERR_OID_NONINCREASING
-  | SNMPERR_JUST_A_CONTEXT_PROBE [@@deriving sexp, enumerate]
+  | SNMPERR_JUST_A_CONTEXT_PROBE
+[@@deriving sexp, enumerate]

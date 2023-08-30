@@ -10,8 +10,8 @@ module type S = sig
   val get_node : string -> Oid.t IO.t
   val get_module_node : string -> string -> Oid.t IO.t
   val netsnmp_read_module : string -> unit IO.t
-  val read_mib : string -> unit  IO.t
-  val read_all_mibs : unit -> unit  IO.t
+  val read_mib : string -> unit IO.t
+  val read_all_mibs : unit -> unit IO.t
   val print_mib : fd:int -> unit IO.t
   val fprint_objid : fd:int -> Oid.t -> unit IO.t
   val snprint_description : Oid.t -> string IO.t

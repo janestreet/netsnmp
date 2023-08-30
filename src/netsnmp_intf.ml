@@ -7,11 +7,14 @@ module type S = sig
   *)
   module ASN1_value = ASN1_value
 
-  include (module type of struct include Netsnmp_types end)
+  include module type of struct
+    include Netsnmp_types
+  end
 
   module Oid : sig
-
-    include (module type of struct include Oid end)
+    include module type of struct
+      include Oid
+    end
 
     (** [of_string] - convert string to an [Oid.t], modules reference will be loaded
         if they are in the mib path *)
@@ -39,7 +42,6 @@ module type S = sig
         and then call the function [f] with the session. Closes the session in all
         cases before returning *)
     val with_connection : Connection_info.t -> f:(t -> 'a) -> 'a IO.t
-
   end
 
   (** [add_mib_paths] adds directories to search for mibs in.  Note that this will
@@ -56,7 +58,6 @@ module type S = sig
 
   (** [get_next] - get the value of the next node after the supplied oid *)
   val get_next : Connection.t -> Oid.t -> (Oid.t * ASN1_value.t) list IO.t
-
 
   module Raw : sig
     module Oid = Oid

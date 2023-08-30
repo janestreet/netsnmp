@@ -38,6 +38,7 @@ val get_module_node : string -> string -> Oid.t
     error reporting, sigh.  See netsnmp_read_module(3), read_mib(3) and read_all_mibs(3)
     for more details *)
 val netsnmp_read_module : string -> unit
+
 val read_mib : string -> unit
 val read_all_mibs : unit -> unit
 
@@ -47,6 +48,7 @@ val read_all_mibs : unit -> unit
     for more details
  *)
 val snmp_set_mib_errors : int -> unit
+
 val snmp_set_mib_warnings : int -> unit
 
 (** [print_mib] takes a file descriptor unlike the C API, flush any output

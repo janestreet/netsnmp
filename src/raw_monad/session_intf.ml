@@ -3,7 +3,9 @@ open! Import
 module type S = sig
   module IO : Io_intf.S
 
-  include module type of (struct include Session end)
+  include module type of struct
+    include Session
+  end
 
   val snmp_sess_open
     :  version:Snmp_version.t
@@ -20,9 +22,5 @@ module type S = sig
     -> t IO.t
 
   val snmp_sess_close : t -> unit IO.t
-
-  val snmp_sess_synch_response
-   :  t
-   -> Pdu.t
-   -> ( Oid.t * ASN1_value.t ) list IO.t
+  val snmp_sess_synch_response : t -> Pdu.t -> (Oid.t * ASN1_value.t) list IO.t
 end

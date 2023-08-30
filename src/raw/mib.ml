@@ -19,7 +19,15 @@ external fprint_objid : fd:int -> Oid.t -> unit = "caml_fprint_objid"
 external snprint_description : Oid.t -> string = "caml_snprint_description"
 external snprint_objid : Oid.t -> string = "caml_snprint_objid"
 external snmp_set_save_descriptions : bool -> unit = "caml_snmp_set_save_descriptions"
-external add_module_replacement : string -> string -> string -> int -> unit = "caml_add_module_replacement"
+
+external add_module_replacement
+  :  string
+  -> string
+  -> string
+  -> int
+  -> unit
+  = "caml_add_module_replacement"
+
 external objid_of_int_array : int array -> Oid.t = "caml_objid_of_int_array"
 external objid_to_int_array : Oid.t -> int array = "caml_objid_to_int_array"
 
@@ -27,5 +35,5 @@ let print_mib ~fd () = print_mib_c ~fd
 
 let add_mibdir dir =
   let count = add_mibdir_c dir in
-  if count < 0 then raise (Netsnmp_exceptions.Not_found dir)
-  else count
+  if count < 0 then raise (Netsnmp_exceptions.Not_found dir) else count
+;;

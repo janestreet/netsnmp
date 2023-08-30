@@ -17,26 +17,37 @@ let run hostname community =
   Mib.netsnmp_init_mib ()
   >>= fun () ->
   Raw.Session.snmp_sess_open
-    ~version ~retries ~timeout ~peername ~localname ~local_port
-    ~community ~securityName ~securityAuthProto ~securityAuthPassword ()
+    ~version
+    ~retries
+    ~timeout
+    ~peername
+    ~localname
+    ~local_port
+    ~community
+    ~securityName
+    ~securityAuthProto
+    ~securityAuthPassword
+    ()
   >>= fun sess ->
   Raw.Pdu.snmp_pdu_create Raw.Pdu.Pdu_type.Get
-    >>= add_oid "sysDescr.0"
-    >>= add_oid "sysDescr.1"
-    >>= add_oid "tcpRtoAlgorithm.0"
-    >>= add_oid "SNMPv2-MIB::sysORID.1"
+  >>= add_oid "sysDescr.0"
+  >>= add_oid "sysDescr.1"
+  >>= add_oid "tcpRtoAlgorithm.0"
+  >>= add_oid "SNMPv2-MIB::sysORID.1"
   >>= fun pdu ->
-    printf "start list%!\n";
-    Raw.Session.snmp_sess_synch_response sess pdu
-    >>= Deferred.List.iter ~how:(`Sequential) ~f:(fun (oid, value) ->
-      Mib.snprint_objid oid
-      >>= fun oid_s ->
-      printf "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
-        oid_s
-        (Netsnmp_raw.ASN1_value.type_to_string value)
-        (Netsnmp_raw.ASN1_value.to_string value);
-         Deferred.unit)
-    >>| fun () -> printf "end list%!\n"
+  printf "start list%!\n";
+  Raw.Session.snmp_sess_synch_response sess pdu
+  >>= Deferred.List.iter ~how:`Sequential ~f:(fun (oid, value) ->
+        Mib.snprint_objid oid
+        >>= fun oid_s ->
+        printf
+          "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
+          oid_s
+          (Netsnmp_raw.ASN1_value.type_to_string value)
+          (Netsnmp_raw.ASN1_value.to_string value);
+        Deferred.unit)
+  >>| fun () -> printf "end list%!\n"
+;;
 
 let () =
   Command.async_spec
@@ -44,7 +55,8 @@ let () =
     Command.Spec.(
       empty
       +> flag "-c" (required string) ~doc:"SNMP v2c community"
-      +> anon ("hostname" %: string)
-    )
-    (fun community hostname () -> run hostname community) ~behave_nicely_in_pipeline:(false)
+      +> anon ("hostname" %: string))
+    (fun community hostname () -> run hostname community)
+    ~behave_nicely_in_pipeline:false
   |> Command_unix.run
+;;

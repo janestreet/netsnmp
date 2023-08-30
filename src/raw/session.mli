@@ -18,9 +18,9 @@ end
 (** Supported SNMP authentication protocols for V3
  *)
 module Snmp_sec_auth_proto : sig
- type t =
-   | Ignore
-   | UsmHMACMD5AuthProtocol
+  type t =
+    | Ignore
+    | UsmHMACMD5AuthProtocol
 end
 
 (** [snmp_sess_open] creates a session between the client and host and returns a handle.
@@ -66,7 +66,4 @@ val snmp_sess_close : t -> unit
     Note that the PDU will be freed in all cases
 
 *)
-val snmp_sess_synch_response
- :  t
- -> Pdu.t
- -> ( Oid.t * ASN1_value.t ) list
+val snmp_sess_synch_response : t -> Pdu.t -> (Oid.t * ASN1_value.t) list
