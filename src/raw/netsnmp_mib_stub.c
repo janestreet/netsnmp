@@ -399,9 +399,9 @@ CAMLprim value caml_objid_to_int_array(value ml_oid)
   CAMLparam1(ml_oid);
   CAMLlocal1(ml_ret);
   int objid_len = Int_val(Field(ml_oid, 1));
+  ml_ret = caml_alloc(objid_len, 0);
   oid *anOID = (oid *)Bytes_val(Field(ml_oid, 0));
 
-  ml_ret = caml_alloc(objid_len, 0);
   for (int i = 0; i < objid_len; i++) {
     Store_field(ml_ret, i, Val_int((int)anOID[i]));
   }
