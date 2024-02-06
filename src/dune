@@ -1,3 +1,7 @@
-(library (name netsnmp) (public_name netsnmp)
- (libraries str netsnmp_raw_monad re) (virtual_deps conf-netsnmp)
- (preprocess (pps ppx_jane)))
+(library
+ (name netsnmp)
+ (public_name netsnmp)
+ (libraries str netsnmp_raw_monad re)
+ (virtual_deps conf-netsnmp)
+ (preprocess
+  (pps ppx_jane)))
