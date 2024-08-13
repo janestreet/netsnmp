@@ -19,32 +19,23 @@
 
 static pthread_mutex_t lib_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void netsnmp_stubs_mutex_lock(void)
-{
-  pthread_mutex_lock(&lib_lock);
-}
+static void netsnmp_stubs_mutex_lock(void) { pthread_mutex_lock(&lib_lock); }
 
-static void netsnmp_stubs_mutex_unlock(void)
-{
-  pthread_mutex_unlock(&lib_lock);
-}
+static void netsnmp_stubs_mutex_unlock(void) { pthread_mutex_unlock(&lib_lock); }
 
-void netsnmp_init_mib_mutex(void)
-{
+void netsnmp_init_mib_mutex(void) {
   netsnmp_stubs_mutex_lock();
   netsnmp_init_mib();
   netsnmp_stubs_mutex_unlock();
 }
 
-void shutdown_mib_mutex(void)
-{
+void shutdown_mib_mutex(void) {
   netsnmp_stubs_mutex_lock();
   shutdown_mib();
   netsnmp_stubs_mutex_unlock();
 }
 
-int add_mibdir_mutex(const char *path)
-{
+int add_mibdir_mutex(const char *path) {
   int res;
 
   netsnmp_stubs_mutex_lock();
@@ -53,8 +44,7 @@ int add_mibdir_mutex(const char *path)
   return res;
 }
 
-struct tree *netsnmp_read_module_mutex(const char *name)
-{
+struct tree *netsnmp_read_module_mutex(const char *name) {
   struct tree *res;
 
   netsnmp_stubs_mutex_lock();
@@ -63,8 +53,7 @@ struct tree *netsnmp_read_module_mutex(const char *name)
   return res;
 }
 
-struct tree *read_mib_mutex(const char *filename)
-{
+struct tree *read_mib_mutex(const char *filename) {
   struct tree *res;
 
   netsnmp_stubs_mutex_lock();
@@ -73,8 +62,7 @@ struct tree *read_mib_mutex(const char *filename)
   return res;
 }
 
-struct tree *read_all_mibs_mutex(void)
-{
+struct tree *read_all_mibs_mutex(void) {
   struct tree *res;
 
   netsnmp_stubs_mutex_lock();
@@ -83,36 +71,32 @@ struct tree *read_all_mibs_mutex(void)
   return res;
 }
 
-void add_module_replacement_mutex(const char *old_module, const char *new_module, const char *tag, int len)
-{
+void add_module_replacement_mutex(const char *old_module, const char *new_module,
+                                  const char *tag, int len) {
   netsnmp_stubs_mutex_lock();
   add_module_replacement(old_module, new_module, tag, len);
   netsnmp_stubs_mutex_unlock();
 }
 
-void snmp_set_mib_warnings_mutex(int level)
-{
+void snmp_set_mib_warnings_mutex(int level) {
   netsnmp_stubs_mutex_lock();
   snmp_set_mib_warnings(level);
   netsnmp_stubs_mutex_unlock();
 }
 
-void snmp_set_save_descriptions_mutex(int save)
-{
+void snmp_set_save_descriptions_mutex(int save) {
   netsnmp_stubs_mutex_lock();
   snmp_set_save_descriptions(save);
   netsnmp_stubs_mutex_unlock();
 }
 
-void snmp_set_mib_errors_mutex(int level)
-{
+void snmp_set_mib_errors_mutex(int level) {
   netsnmp_stubs_mutex_lock();
   snmp_set_mib_errors(level);
   netsnmp_stubs_mutex_unlock();
 }
 
-int read_objid_mutex(const char *input, oid *objid, size_t *objidlen)
-{
+int read_objid_mutex(const char *input, oid *objid, size_t *objidlen) {
   int res;
 
   netsnmp_stubs_mutex_lock();
@@ -121,8 +105,7 @@ int read_objid_mutex(const char *input, oid *objid, size_t *objidlen)
   return res;
 }
 
-oid *snmp_parse_oid_mutex(const char *input, oid *objid, size_t *objidlen)
-{
+oid *snmp_parse_oid_mutex(const char *input, oid *objid, size_t *objidlen) {
   oid *res;
 
   netsnmp_stubs_mutex_lock();
@@ -131,8 +114,8 @@ oid *snmp_parse_oid_mutex(const char *input, oid *objid, size_t *objidlen)
   return res;
 }
 
-int get_module_node_mutex(const char *name, const char *module, oid *objid, size_t *objidlen)
-{
+int get_module_node_mutex(const char *name, const char *module, oid *objid,
+                          size_t *objidlen) {
   int res;
 
   netsnmp_stubs_mutex_lock();
@@ -141,8 +124,7 @@ int get_module_node_mutex(const char *name, const char *module, oid *objid, size
   return res;
 }
 
-int get_node_mutex(const char *name, oid *objid, size_t *objidlen)
-{
+int get_node_mutex(const char *name, oid *objid, size_t *objidlen) {
   int res;
 
   netsnmp_stubs_mutex_lock();
@@ -151,22 +133,19 @@ int get_node_mutex(const char *name, oid *objid, size_t *objidlen)
   return res;
 }
 
-void print_mib_mutex(FILE * fp)
-{
+void print_mib_mutex(FILE *fp) {
   netsnmp_stubs_mutex_lock();
   print_mib(fp);
   netsnmp_stubs_mutex_unlock();
 }
 
-void fprint_objid_mutex(FILE * fp, const oid * objid, size_t objidlen)
-{
+void fprint_objid_mutex(FILE *fp, const oid *objid, size_t objidlen) {
   netsnmp_stubs_mutex_lock();
   fprint_objid(fp, objid, objidlen);
   netsnmp_stubs_mutex_unlock();
 }
 
-int snprint_objid_mutex(char *buf, size_t buf_len, const oid * objid, size_t objidlen)
-{
+int snprint_objid_mutex(char *buf, size_t buf_len, const oid *objid, size_t objidlen) {
   int res;
 
   netsnmp_stubs_mutex_lock();
@@ -175,8 +154,8 @@ int snprint_objid_mutex(char *buf, size_t buf_len, const oid * objid, size_t obj
   return res;
 }
 
-int snprint_description_mutex(char *buf, size_t buf_len, oid * objid, size_t objidlen, int width)
-{
+int snprint_description_mutex(char *buf, size_t buf_len, oid *objid, size_t objidlen,
+                              int width) {
   int res;
 
   netsnmp_stubs_mutex_lock();
@@ -185,8 +164,7 @@ int snprint_description_mutex(char *buf, size_t buf_len, oid * objid, size_t obj
   return res;
 }
 
-netsnmp_pdu *snmp_pdu_create_mutex(int type)
-{
+netsnmp_pdu *snmp_pdu_create_mutex(int type) {
   netsnmp_pdu *res;
 
   netsnmp_stubs_mutex_lock();
@@ -195,15 +173,13 @@ netsnmp_pdu *snmp_pdu_create_mutex(int type)
   return res;
 }
 
-void snmp_free_pdu_mutex(struct snmp_pdu *pdu)
-{
+void snmp_free_pdu_mutex(struct snmp_pdu *pdu) {
   netsnmp_stubs_mutex_lock();
   snmp_free_pdu(pdu);
   netsnmp_stubs_mutex_unlock();
 }
 
-netsnmp_pdu *snmp_clone_pdu_mutex(netsnmp_pdu *pdu)
-{
+netsnmp_pdu *snmp_clone_pdu_mutex(netsnmp_pdu *pdu) {
   netsnmp_pdu *res;
 
   netsnmp_stubs_mutex_lock();
@@ -212,36 +188,34 @@ netsnmp_pdu *snmp_clone_pdu_mutex(netsnmp_pdu *pdu)
   return res;
 }
 
-netsnmp_variable_list *snmp_add_null_var_mutex(netsnmp_pdu *pdu, const oid * name, size_t name_length)
-{
+netsnmp_variable_list *snmp_add_null_var_mutex(netsnmp_pdu *pdu, const oid *name,
+                                               size_t name_length) {
   netsnmp_variable_list *res;
-  
+
   netsnmp_stubs_mutex_lock();
   res = snmp_add_null_var(pdu, name, name_length);
   netsnmp_stubs_mutex_unlock();
   return res;
 }
 
-netsnmp_variable_list *snmp_pdu_add_variable_mutex(
-  netsnmp_pdu *pdu, const oid *name, size_t name_length, u_char type, const void *value, size_t len)
-{
+netsnmp_variable_list *snmp_pdu_add_variable_mutex(netsnmp_pdu *pdu, const oid *name,
+                                                   size_t name_length, u_char type,
+                                                   const void *value, size_t len) {
   netsnmp_variable_list *res;
-  
+
   netsnmp_stubs_mutex_lock();
   res = snmp_pdu_add_variable(pdu, name, name_length, type, value, len);
   netsnmp_stubs_mutex_unlock();
   return res;
 }
 
-void snmp_sess_init_mutex(netsnmp_session *session)
-{
+void snmp_sess_init_mutex(netsnmp_session *session) {
   netsnmp_stubs_mutex_lock();
   snmp_sess_init(session);
   netsnmp_stubs_mutex_unlock();
 }
 
-void *snmp_sess_open_mt(netsnmp_session *session)
-{
+void *snmp_sess_open_mt(netsnmp_session *session) {
   void *res;
 
   /* This is thread safe */
@@ -249,8 +223,7 @@ void *snmp_sess_open_mt(netsnmp_session *session)
   return res;
 }
 
-int snmp_sess_close_mt(void *handle)
-{
+int snmp_sess_close_mt(void *handle) {
   int res;
 
   /* This is thread safe */
@@ -258,8 +231,7 @@ int snmp_sess_close_mt(void *handle)
   return res;
 }
 
-int snmp_sess_synch_response_mt(void *handle, netsnmp_pdu *pdu, netsnmp_pdu **response)
-{
+int snmp_sess_synch_response_mt(void *handle, netsnmp_pdu *pdu, netsnmp_pdu **response) {
   int res;
 
   /* This is thread safe */

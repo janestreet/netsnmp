@@ -8,24 +8,25 @@
 
 /** Netsnmp_stubs_mutex provides a thread safe low level interface to net-snmp's API.
  *  The functions guard library calls that arn't thread safe with a mutex.
- *  For more complete documentation see the Net-SNMP manual pages for the 
+ *  For more complete documentation see the Net-SNMP manual pages for the
  *  function without the _mutex suffix */
 
 /** Mib functions. See the the add_mibdir(3) man page unless otherwise noted */
 
-/** [netsnmp_init_mib_mutex] initialises the net-snmp mib library and must be called before
-    {i most} MIB functions, see per function documentation for exceptions.
-    More information can be found in the net-snmp manual page: init_mib(3) */
+/** [netsnmp_init_mib_mutex] initialises the net-snmp mib library and must be called
+   before {i most} MIB functions, see per function documentation for exceptions. More
+   information can be found in the net-snmp manual page: init_mib(3) */
 void netsnmp_init_mib_mutex(void);
 
-/** [shutdown_mib_mutex] cleans up and free memory assocated with the net-snmp mib library.
+/** [shutdown_mib_mutex] cleans up and free memory assocated with the net-snmp mib
+   library.
     Don't call any MIB functions afterwards. See shutdown_mib(3) for more details.  */
 void shutdown_mib_mutex(void);
 
 /** [add_mibdir_mutex] adds a directory to the list of directories to search when loading
-    MIB modules.  This must be called {i after} [netsnmp_init_mib_mutex] even though the man
-    page says the opposite. Raises [Netsnmp_exceptions.Not_found_mutex] if the directory
-    is missing.  See add_mibdir(3) for more details */
+    MIB modules.  This must be called {i after} [netsnmp_init_mib_mutex] even though the
+   man page says the opposite. Raises [Netsnmp_exceptions.Not_found_mutex] if the
+   directory is missing.  See add_mibdir(3) for more details */
 int add_mibdir_mutex(const char *);
 
 /** The netsnmp [netsnmp_read_module_mutex] and read_mib functions do not provide reliable
@@ -69,22 +70,23 @@ int get_node_mutex(const char *, oid *, size_t *);
     before calling these functions to avoid output ordering issues.
     See print_mib(3) for more details
 */
-void print_mib_mutex(FILE * fp);
+void print_mib_mutex(FILE *fp);
 /** [fprint_objid_mutex] takes a file descriptor unlike the C API.
     See fprint_objid(3) for more details */
 
-void fprint_objid_mutex(FILE * fp, const oid * objid, size_t objidlen);
-/** [snprint_objid_mutex] converts a Oid.t to the textual representation. See snprint_objid(3) for more details
-*/
-int snprint_objid_mutex(char *buf, size_t buf_len, const oid * objid, size_t objidlen);
-
+void fprint_objid_mutex(FILE *fp, const oid *objid, size_t objidlen);
+/** [snprint_objid_mutex] converts a Oid.t to the textual representation. See
+ * snprint_objid(3) for more details
+ */
+int snprint_objid_mutex(char *buf, size_t buf_len, const oid *objid, size_t objidlen);
 
 /* PDU related */
 
-/* [snprint_description_mutex] converts a Oid.t to the textual representation including the
-   additional information from the mib entry.  See snprint_description(3) for more details */
-int snprint_description_mutex(char *buf, size_t buf_len, oid * objid, size_t objidlen, int width);
-
+/* [snprint_description_mutex] converts a Oid.t to the textual representation including
+   the additional information from the mib entry.  See snprint_description(3) for more
+   details */
+int snprint_description_mutex(char *buf, size_t buf_len, oid *objid, size_t objidlen,
+                              int width);
 
 /** [snmp_pdu_create_mutex] creates a PDU of the specified type, the associated
     memory is not part of the OCaml heap. */
@@ -95,13 +97,14 @@ netsnmp_pdu *snmp_clone_pdu_mutex(netsnmp_pdu *pdu);
 
 /** [snmp_add_null_var_mutex] adds an oid to a pdu with a null value.
     Used to build a request PDU */
-netsnmp_variable_list *snmp_add_null_var_mutex(netsnmp_pdu *pdu, const oid * name, size_t name_length);
+netsnmp_variable_list *snmp_add_null_var_mutex(netsnmp_pdu *pdu, const oid *name,
+                                               size_t name_length);
 
 /** [snmp_add_variable_mutex] adds an oid and value to a pdu
     Used to build a request PDU */
-netsnmp_variable_list *snmp_pdu_add_variable_mutex(netsnmp_pdu *pdu,
-  const oid *name, size_t name_length, u_char type, const void *value, size_t len);
-
+netsnmp_variable_list *snmp_pdu_add_variable_mutex(netsnmp_pdu *pdu, const oid *name,
+                                                   size_t name_length, u_char type,
+                                                   const void *value, size_t len);
 
 /* Session related */
 
@@ -111,7 +114,8 @@ netsnmp_variable_list *snmp_pdu_add_variable_mutex(netsnmp_pdu *pdu,
     snmp_sess_open.  */
 void snmp_sess_init_mutex(netsnmp_session *);
 
-/** [snmp_sess_open_mutex] creates a session between the client and host and returns a handle. */
+/** [snmp_sess_open_mutex] creates a session between the client and host and returns a
+ * handle. */
 void *snmp_sess_open_mt(netsnmp_session *);
 
 /** [snmp_sess_close_mutex] shuts down the connection and frees resources.  */
@@ -121,4 +125,3 @@ int snmp_sess_close_mt(void *);
     Note that this is completely synchronous. */
 int snmp_sess_synch_response_mt(void *, netsnmp_pdu *, netsnmp_pdu **);
 #endif
-

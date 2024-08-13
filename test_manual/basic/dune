@@ -1,6 +1,6 @@
 (executables
  (modes byte exe)
  (names mib_test sess_test var_types netsnmp_test)
- (libraries core netsnmp re)
+ (libraries core netsnmp netsnmp_raw netsnmp_raw_monad re)
  (preprocess
   (pps ppx_jane)))

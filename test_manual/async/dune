@@ -1,6 +1,6 @@
 (executables
  (modes byte exe)
  (names mib_async_test sess_async_test)
- (libraries core async core_unix.command_unix netsnmp.async)
+ (libraries async core_unix.command_unix core netsnmp.async netsnmp_raw)
  (preprocess
   (pps ppx_jane)))

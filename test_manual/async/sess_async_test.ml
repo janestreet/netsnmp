@@ -38,14 +38,14 @@ let run hostname community =
   printf "start list%!\n";
   Raw.Session.snmp_sess_synch_response sess pdu
   >>= Deferred.List.iter ~how:`Sequential ~f:(fun (oid, value) ->
-        Mib.snprint_objid oid
-        >>= fun oid_s ->
-        printf
-          "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
-          oid_s
-          (Netsnmp_raw.ASN1_value.type_to_string value)
-          (Netsnmp_raw.ASN1_value.to_string value);
-        Deferred.unit)
+    Mib.snprint_objid oid
+    >>= fun oid_s ->
+    printf
+      "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
+      oid_s
+      (Netsnmp_raw.ASN1_value.type_to_string value)
+      (Netsnmp_raw.ASN1_value.to_string value);
+    Deferred.unit)
   >>| fun () -> printf "end list%!\n"
 ;;
 

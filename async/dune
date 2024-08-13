@@ -1,6 +1,6 @@
 (library
  (name netsnmp_async)
  (public_name netsnmp.async)
- (libraries async core netsnmp)
+ (libraries async core netsnmp netsnmp_raw_monad)
  (preprocess
   (pps ppx_jane)))

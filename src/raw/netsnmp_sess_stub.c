@@ -24,47 +24,49 @@
  */
 
 /* Not defined by mlvalues.h */
-#define Val_unsigned_int(x) ((x<<1)+1)
+#define Val_unsigned_int(x) ((x << 1) + 1)
 
-#define AUTH_PROTO_IGNORE                 (0)
+#define AUTH_PROTO_IGNORE (0)
 #define AUTH_PROTO_USMHMACMD5AUTHPROTOCOL (1)
 
-static long ml_snmp_version_to_c(int v)
-{
-  switch (v)
-  {
-    case 0:  return SNMP_VERSION_1;
-    case 1:  return SNMP_VERSION_2c;
-    case 2:  return SNMP_VERSION_3;
-    default: caml_failwith("unknown snmp version");
+static long ml_snmp_version_to_c(int v) {
+  switch (v) {
+  case 0:
+    return SNMP_VERSION_1;
+  case 1:
+    return SNMP_VERSION_2c;
+  case 2:
+    return SNMP_VERSION_3;
+  default:
+    caml_failwith("unknown snmp version");
   }
 }
 
-static int ml_snmp_sec_auth_proto_to_c(int v)
-{
-  switch (v)
-  {
-    case 0:  return AUTH_PROTO_IGNORE;
-    case 1:  return AUTH_PROTO_USMHMACMD5AUTHPROTOCOL;
-    default: caml_failwith("unknown snmp auth protocol");
+static int ml_snmp_sec_auth_proto_to_c(int v) {
+  switch (v) {
+  case 0:
+    return AUTH_PROTO_IGNORE;
+  case 1:
+    return AUTH_PROTO_USMHMACMD5AUTHPROTOCOL;
+  default:
+    caml_failwith("unknown snmp auth protocol");
   }
 }
 
 #define Sess_val(v) (*((netsnmp_session **)Data_custom_val(v)))
 
-static value alloc_sess(netsnmp_session * session)
-{
+static value alloc_sess(netsnmp_session *session) {
   value v = caml_alloc(1, Abstract_tag);
   Sess_val(v) = session;
   return v;
 }
 
-CAMLprim value caml_snmp_sess_init(value unit __attribute__((unused)))
-{
+CAMLprim value caml_snmp_sess_init(value unit __attribute__((unused))) {
   CAMLparam0();
   CAMLlocal1(ml_session);
   netsnmp_session *session = (netsnmp_session *)malloc(sizeof(netsnmp_session));
-  if (session == NULL) oom_error();
+  if (session == NULL)
+    oom_error();
 
   caml_release_runtime_system();
   snmp_sess_init_mutex(session);
@@ -73,126 +75,127 @@ CAMLprim value caml_snmp_sess_init(value unit __attribute__((unused)))
   CAMLreturn(alloc_sess(session));
 }
 
-void free_session(netsnmp_session *session)
-{
-  if (NULL != session->peername) free(session->peername);
-  if (NULL != session->localname) free(session->localname);
-  if (NULL != session->community) free(session->community);
-  if (NULL != session->securityName) free(session->securityName);
+void free_session(netsnmp_session *session) {
+  if (NULL != session->peername)
+    free(session->peername);
+  if (NULL != session->localname)
+    free(session->localname);
+  if (NULL != session->community)
+    free(session->community);
+  if (NULL != session->securityName)
+    free(session->securityName);
   free(session);
 }
 
-CAMLprim value caml_snmp_sess_open(value ml_session_cfg)
-{
+CAMLprim value caml_snmp_sess_open(value ml_session_cfg) {
   CAMLparam1(ml_session_cfg);
   CAMLlocal1(ml_session_handle);
   netsnmp_session *session;
   void *session_handle;
   const char *s;
 
- /* ml_session_cfg
-  *
-  *   version              : snmp_version         [0]
-  * ; retries              : int                  [1]
-  * ; timeout              : int                  [2]
-  * ; peername             : string               [3]
-  * ; localname            : string               [4]
-  * ; local_port           : int                  [5]
-  * v1/2c
-  * ; community            : string               [6]
-  * v3
-  * ; securityName         : string               [7]
-  * ; securityAuthProto    : snmp_sec_auth_proto  [8]
-  * ; securityAuthPassword : string               [9]
-  */
+  /* ml_session_cfg
+   *
+   *   version              : snmp_version         [0]
+   * ; retries              : int                  [1]
+   * ; timeout              : int                  [2]
+   * ; peername             : string               [3]
+   * ; localname            : string               [4]
+   * ; local_port           : int                  [5]
+   * v1/2c
+   * ; community            : string               [6]
+   * v3
+   * ; securityName         : string               [7]
+   * ; securityAuthProto    : snmp_sec_auth_proto  [8]
+   * ; securityAuthPassword : string               [9]
+   */
 
   session = (netsnmp_session *)malloc(sizeof(netsnmp_session));
-  if (session == NULL) oom_error();
+  if (session == NULL)
+    oom_error();
 
   caml_release_runtime_system();
   snmp_sess_init_mutex(session);
   caml_acquire_runtime_system();
 
-  session->version = ml_snmp_version_to_c(Int_val(Field(ml_session_cfg,0)));
+  session->version = ml_snmp_version_to_c(Int_val(Field(ml_session_cfg, 0)));
 
-  if (Int_val(Field(ml_session_cfg,1)) > 0)
-    session->retries = Int_val(Field(ml_session_cfg,1));
+  if (Int_val(Field(ml_session_cfg, 1)) > 0)
+    session->retries = Int_val(Field(ml_session_cfg, 1));
 
-  if (Int_val(Field(ml_session_cfg,2)) > 0)
-    session->timeout = Int_val(Field(ml_session_cfg,2));
+  if (Int_val(Field(ml_session_cfg, 2)) > 0)
+    session->timeout = Int_val(Field(ml_session_cfg, 2));
 
-  session->peername = strdup(String_val(Field(ml_session_cfg,3)));
-  if (session->peername == NULL) oom_error();
+  session->peername = strdup(String_val(Field(ml_session_cfg, 3)));
+  if (session->peername == NULL)
+    oom_error();
 
-  s = String_val(Field(ml_session_cfg,4));
-  if (!(strlen(s) == 0 || (strlen(s) == 1 && strcmp(s, "0"))))
-  {
-    session->localname = strdup(String_val(Field(ml_session_cfg,4)));
-    if (session->localname == NULL) oom_error();
+  s = String_val(Field(ml_session_cfg, 4));
+  if (!(strlen(s) == 0 || (strlen(s) == 1 && strcmp(s, "0")))) {
+    session->localname = strdup(String_val(Field(ml_session_cfg, 4)));
+    if (session->localname == NULL)
+      oom_error();
   }
 
-  if (Int_val(Field(ml_session_cfg,5)) > 0)
-    session->local_port = Int_val(Field(ml_session_cfg,5));
+  if (Int_val(Field(ml_session_cfg, 5)) > 0)
+    session->local_port = Int_val(Field(ml_session_cfg, 5));
 
-  switch (session->version)
-  {
-    case SNMP_VERSION_1:
-    case SNMP_VERSION_2c:
-      session->community = (u_char *)strdup(String_val(Field(ml_session_cfg,6)));
-      if (session->community == NULL) oom_error();
-      session->community_len = strlen((const char *)session->community);
+  switch (session->version) {
+  case SNMP_VERSION_1:
+  case SNMP_VERSION_2c:
+    session->community = (u_char *)strdup(String_val(Field(ml_session_cfg, 6)));
+    if (session->community == NULL)
+      oom_error();
+    session->community_len = strlen((const char *)session->community);
+    break;
+  case SNMP_VERSION_3:
+    session->securityName = strdup(String_val(Field(ml_session_cfg, 7)));
+    if (session->securityName == NULL)
+      oom_error();
+    session->securityNameLen = strlen(session->securityName);
+    switch (ml_snmp_sec_auth_proto_to_c(Field(ml_session_cfg, 8))) {
+    case AUTH_PROTO_IGNORE:
       break;
-    case SNMP_VERSION_3:
-      session->securityName = strdup(String_val(Field(ml_session_cfg,7)));
-      if (session->securityName == NULL) oom_error();
-      session->securityNameLen = strlen(session->securityName);
-      switch (ml_snmp_sec_auth_proto_to_c(Field(ml_session_cfg,8)))
-      {
-        case AUTH_PROTO_IGNORE:
-          break;
-        case AUTH_PROTO_USMHMACMD5AUTHPROTOCOL:
-          session->securityAuthProto = usmHMACMD5AuthProtocol;
-          session->securityAuthProtoLen = sizeof(usmHMACMD5AuthProtocol)/sizeof(oid);
-          session->securityAuthKeyLen = USM_AUTH_KU_LEN;
-          s = String_val(Field(ml_session_cfg,9));
-          if (generate_Ku(session->securityAuthProto, session->securityAuthProtoLen,
-                          (u_char *) s, strlen(s),
-                          session->securityAuthKey,
-                          &session->securityAuthKeyLen) != SNMPERR_SUCCESS) {
-            free_session(session);
-            caml_failwith("failed to generate Ku from auth pass phrase");
-          }
-          break;
-        default:
-          free_session(session);
-          caml_failwith("unknown version 3 securityAuthProto");
+    case AUTH_PROTO_USMHMACMD5AUTHPROTOCOL:
+      session->securityAuthProto = usmHMACMD5AuthProtocol;
+      session->securityAuthProtoLen = sizeof(usmHMACMD5AuthProtocol) / sizeof(oid);
+      session->securityAuthKeyLen = USM_AUTH_KU_LEN;
+      s = String_val(Field(ml_session_cfg, 9));
+      if (generate_Ku(session->securityAuthProto, session->securityAuthProtoLen,
+                      (u_char *)s, strlen(s), session->securityAuthKey,
+                      &session->securityAuthKeyLen) != SNMPERR_SUCCESS) {
+        free_session(session);
+        caml_failwith("failed to generate Ku from auth pass phrase");
       }
       break;
     default:
       free_session(session);
-      caml_failwith("unknown snmp version when creating session");
+      caml_failwith("unknown version 3 securityAuthProto");
+    }
+    break;
+  default:
+    free_session(session);
+    caml_failwith("unknown snmp version when creating session");
   }
   caml_release_runtime_system();
   SOCK_STARTUP;
-  session_handle = snmp_sess_open_mt( session );
+  session_handle = snmp_sess_open_mt(session);
   caml_acquire_runtime_system();
 
   free_session(session);
 
-  if (!session_handle)
-  {
+  if (!session_handle) {
     caml_release_runtime_system();
     SOCK_CLEANUP;
     caml_acquire_runtime_system();
     caml_failwith("snmp_sess_open failed");
   }
 
-  p_to_ml_value(session_handle,ml_session_handle);
+  p_to_ml_value(session_handle, ml_session_handle);
   CAMLreturn(ml_session_handle);
 }
 
-CAMLprim value caml_snmp_sess_close(value ml_handle)
-{
+CAMLprim value caml_snmp_sess_close(value ml_handle) {
   void *handle;
   ml_value_to_p(ml_handle, handle);
   caml_release_runtime_system();
@@ -203,8 +206,7 @@ CAMLprim value caml_snmp_sess_close(value ml_handle)
   return Val_unit;
 }
 
-static value oid_value_data_uint(int tag, uint val)
-{
+static value oid_value_data_uint(int tag, uint val) {
   CAMLparam0();
   CAMLlocal1(ml_res);
 
@@ -214,8 +216,7 @@ static value oid_value_data_uint(int tag, uint val)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_data_int(int tag, int val)
-{
+static value oid_value_data_int(int tag, int val) {
   CAMLparam0();
   CAMLlocal1(ml_res);
 
@@ -225,8 +226,7 @@ static value oid_value_data_int(int tag, int val)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_data_int64(int tag, int64_t val)
-{
+static value oid_value_data_int64(int tag, int64_t val) {
   CAMLparam0();
   CAMLlocal1(ml_res);
 
@@ -236,8 +236,7 @@ static value oid_value_data_int64(int tag, int64_t val)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_data_uint64(int tag, u_long high, u_long low)
-{
+static value oid_value_data_uint64(int tag, u_long high, u_long low) {
   CAMLparam0();
   CAMLlocal2(ml_res, ml_val);
 
@@ -245,7 +244,8 @@ static value oid_value_data_uint64(int tag, u_long high, u_long low)
   Store_field(ml_val, 0, Val_unsigned_int(high));
   Store_field(ml_val, 1, Val_unsigned_int(low));
 
-  high = 0;  high = Long_val(Field(ml_val, 0));
+  high = 0;
+  high = Long_val(Field(ml_val, 0));
 
   ml_res = caml_alloc(1, tag);
   Store_field(ml_res, 0, ml_val);
@@ -253,8 +253,7 @@ static value oid_value_data_uint64(int tag, u_long high, u_long low)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_data_double(int tag, double val)
-{
+static value oid_value_data_double(int tag, double val) {
   CAMLparam0();
   CAMLlocal1(ml_res);
 
@@ -264,8 +263,7 @@ static value oid_value_data_double(int tag, double val)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_data_string(int tag, char *strval, int str_len)
-{
+static value oid_value_data_string(int tag, char *strval, int str_len) {
   CAMLparam0();
   CAMLlocal2(ml_res, ml_str);
 
@@ -277,8 +275,7 @@ static value oid_value_data_string(int tag, char *strval, int str_len)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_data_oid(int tag, oid *oidval, int oid_len)
-{
+static value oid_value_data_oid(int tag, oid *oidval, int oid_len) {
   CAMLparam0();
   CAMLlocal3(ml_res, ml_oid, ml_objid);
 
@@ -294,8 +291,7 @@ static value oid_value_data_oid(int tag, oid *oidval, int oid_len)
   CAMLreturn(ml_res);
 }
 
-static value oid_value_error(int tag, int err)
-{
+static value oid_value_error(int tag, int err) {
   CAMLparam0();
   CAMLlocal2(ml_res, ml_err);
 
@@ -305,12 +301,20 @@ static value oid_value_error(int tag, int err)
    | Snmp_endofmibview         (2)
    | Snmp_unknown_error of int (0)
    */
-  switch (err)
-  {
-    case SNMP_NOSUCHOBJECT:     ml_err = Val_int(0); break;
-    case SNMP_NOSUCHINSTANCE:   ml_err = Val_int(1); break;
-    case SNMP_ENDOFMIBVIEW:     ml_err = Val_int(2); break;
-    default: ml_err = caml_alloc(1, 0); Store_field(ml_err, 0, Val_int(err)); break;
+  switch (err) {
+  case SNMP_NOSUCHOBJECT:
+    ml_err = Val_int(0);
+    break;
+  case SNMP_NOSUCHINSTANCE:
+    ml_err = Val_int(1);
+    break;
+  case SNMP_ENDOFMIBVIEW:
+    ml_err = Val_int(2);
+    break;
+  default:
+    ml_err = caml_alloc(1, 0);
+    Store_field(ml_err, 0, Val_int(err));
+    break;
   }
   ml_res = caml_alloc(1, tag);
   Store_field(ml_res, 0, ml_err);
@@ -318,8 +322,7 @@ static value oid_value_error(int tag, int err)
   CAMLreturn(ml_res);
 }
 
-CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
-{
+CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu) {
   CAMLparam2(ml_handle, ml_pdu);
   CAMLlocal5(exn_msg, ml_err, ml_node_value, ml_values, cons);
   CAMLlocal3(ml_node, ml_objid, ml_oid);
@@ -336,7 +339,7 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
   ml_values = Val_emptylist;
   ml_value_to_p(ml_handle, handle);
 
-  ppdu = (netsnmp_pdu **) Data_custom_val(ml_pdu);
+  ppdu = (netsnmp_pdu **)Data_custom_val(ml_pdu);
   // We must dereference while we have the runtime lock
   // otherwise, ppdu may be moved while we don't have the lock.
   // Also, the session takes ownership of the pdu's memory
@@ -351,17 +354,15 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
   status = snmp_sess_synch_response_mt(handle, pdu, &response);
   caml_acquire_runtime_system();
 
-  // It happens occasionally that "response" will be NULL 
+  // It happens occasionally that "response" will be NULL
   // despite "status" being STAT_SUCCESS (0). The official python and perl
-  // wrappers that use [snmp_sess_synch_response] do the following to deal 
+  // wrappers that use [snmp_sess_synch_response] do the following to deal
   // with it.
-  if (NULL == response && status == STAT_SUCCESS) 
-  {
+  if (NULL == response && status == STAT_SUCCESS) {
     status = STAT_ERROR;
   }
 
-  if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
-  {
+  if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR) {
 
     /*
     type ASN1_value =
@@ -385,92 +386,93 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
      | ASN_Opaque_double of float         (16)
     */
 
-    for (var = response->variables; var; var = var->next_variable)
-    {
-      switch (var->type)
-      {
-       case ASN_INTEGER:
-         ml_node_value = oid_value_data_int(1, *var->val.integer);
-         break;
-       case ASN_GAUGE:
-         ml_node_value = oid_value_data_uint(2, *var->val.integer);
-         break;
-       case ASN_COUNTER:
-         ml_node_value = oid_value_data_uint(3, *var->val.integer);
-         break;
-       case ASN_TIMETICKS:
-         ml_node_value = oid_value_data_uint(4, *var->val.integer);
-         break;
-       case ASN_UINTEGER:
-         ml_node_value = oid_value_data_uint(5, (unsigned int)*var->val.integer);
-         break;
-       case ASN_OCTET_STR:
-         ml_node_value = oid_value_data_string(6, (char*)var->val.string, var->val_len);
-         break;
-       case ASN_OPAQUE:
-         ml_node_value = oid_value_data_string(7, (char*)var->val.string, var->val_len);
-         break;
-       case ASN_IPADDRESS:
-         ip = (u_char*)var->val.string;
-         snprintf(buf, sizeof buf, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-         buf[(sizeof buf)-1] = '\0';
-         ml_node_value = oid_value_data_string(8, buf, strlen(buf));
-         break;
-       case ASN_NULL:
-         ml_node_value = Val_int(0);
-         break;
-       case ASN_OBJECT_ID:
-         ml_node_value = oid_value_data_oid(9, (oid *)var->val.objid, var->val_len/sizeof(oid));
-         break;
-       case ASN_COUNTER64:
-         c64 = (struct counter64 *)var->val.counter64;
-         ml_node_value = oid_value_data_uint64(10, c64->high, c64->low);
-         break;
-       case ASN_BIT_STR:
-         ml_node_value = oid_value_data_string(11, (char*)var->val.bitstring, var->val_len);
-         break;
-    #ifdef NETSNMP_WITH_OPAQUE_SPECIAL_TYPES
-       case ASN_OPAQUE_COUNTER64:
-         c64 = (struct counter64 *)var->val.counter64;
-         ml_node_value = oid_value_data_uint64(12, c64->high, c64->low);
-         break;
-       case ASN_OPAQUE_U64:
-         c64 = (struct counter64 *)var->val.counter64;
-         ml_node_value = oid_value_data_uint64(13, c64->high, c64->low);
-         break;
+    for (var = response->variables; var; var = var->next_variable) {
+      switch (var->type) {
+      case ASN_INTEGER:
+        ml_node_value = oid_value_data_int(1, *var->val.integer);
+        break;
+      case ASN_GAUGE:
+        ml_node_value = oid_value_data_uint(2, *var->val.integer);
+        break;
+      case ASN_COUNTER:
+        ml_node_value = oid_value_data_uint(3, *var->val.integer);
+        break;
+      case ASN_TIMETICKS:
+        ml_node_value = oid_value_data_uint(4, *var->val.integer);
+        break;
+      case ASN_UINTEGER:
+        ml_node_value = oid_value_data_uint(5, (unsigned int)*var->val.integer);
+        break;
+      case ASN_OCTET_STR:
+        ml_node_value = oid_value_data_string(6, (char *)var->val.string, var->val_len);
+        break;
+      case ASN_OPAQUE:
+        ml_node_value = oid_value_data_string(7, (char *)var->val.string, var->val_len);
+        break;
+      case ASN_IPADDRESS:
+        ip = (u_char *)var->val.string;
+        snprintf(buf, sizeof buf, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+        buf[(sizeof buf) - 1] = '\0';
+        ml_node_value = oid_value_data_string(8, buf, strlen(buf));
+        break;
+      case ASN_NULL:
+        ml_node_value = Val_int(0);
+        break;
+      case ASN_OBJECT_ID:
+        ml_node_value =
+            oid_value_data_oid(9, (oid *)var->val.objid, var->val_len / sizeof(oid));
+        break;
+      case ASN_COUNTER64:
+        c64 = (struct counter64 *)var->val.counter64;
+        ml_node_value = oid_value_data_uint64(10, c64->high, c64->low);
+        break;
+      case ASN_BIT_STR:
+        ml_node_value =
+            oid_value_data_string(11, (char *)var->val.bitstring, var->val_len);
+        break;
+#ifdef NETSNMP_WITH_OPAQUE_SPECIAL_TYPES
+      case ASN_OPAQUE_COUNTER64:
+        c64 = (struct counter64 *)var->val.counter64;
+        ml_node_value = oid_value_data_uint64(12, c64->high, c64->low);
+        break;
+      case ASN_OPAQUE_U64:
+        c64 = (struct counter64 *)var->val.counter64;
+        ml_node_value = oid_value_data_uint64(13, c64->high, c64->low);
+        break;
 
-       case ASN_OPAQUE_I64:
-         c64 = (struct counter64 *)var->val.counter64;
-         i64 = (((uint64_t)c64->high) << 32) | (uint64_t)c64->low;
-         ml_node_value = oid_value_data_int64(14, i64);
-         break;
+      case ASN_OPAQUE_I64:
+        c64 = (struct counter64 *)var->val.counter64;
+        i64 = (((uint64_t)c64->high) << 32) | (uint64_t)c64->low;
+        ml_node_value = oid_value_data_int64(14, i64);
+        break;
 
-       case ASN_OPAQUE_FLOAT:
-         if (var->val.floatVal)
-           ml_node_value = oid_value_data_double(15, (double)(*var->val.floatVal));
-         else
-           ml_node_value = oid_value_error(0, var->type);
-         break;
-
-       case ASN_OPAQUE_DOUBLE:
-         if (var->val.doubleVal)
-           ml_node_value = oid_value_data_double(16, *var->val.doubleVal);
-         else
-           ml_node_value = oid_value_error(0, var->type);
-         break;
-    #endif
-
-       case SNMP_NOSUCHOBJECT:
-       case SNMP_NOSUCHINSTANCE:
-       case SNMP_ENDOFMIBVIEW:
-       case ASN_NSAP:
-       default:
+      case ASN_OPAQUE_FLOAT:
+        if (var->val.floatVal)
+          ml_node_value = oid_value_data_double(15, (double)(*var->val.floatVal));
+        else
           ml_node_value = oid_value_error(0, var->type);
-          break;
+        break;
+
+      case ASN_OPAQUE_DOUBLE:
+        if (var->val.doubleVal)
+          ml_node_value = oid_value_data_double(16, *var->val.doubleVal);
+        else
+          ml_node_value = oid_value_error(0, var->type);
+        break;
+#endif
+
+      case SNMP_NOSUCHOBJECT:
+      case SNMP_NOSUCHINSTANCE:
+      case SNMP_ENDOFMIBVIEW:
+      case ASN_NSAP:
+      default:
+        ml_node_value = oid_value_error(0, var->type);
+        break;
       }
 
       ml_objid = caml_alloc_string(var->name_length * (sizeof *(var->name)));
-      memmove(Bytes_val(ml_objid), (char *)var->name, var->name_length * (sizeof *(var->name)));
+      memmove(Bytes_val(ml_objid), (char *)var->name,
+              var->name_length * (sizeof *(var->name)));
       ml_oid = caml_alloc(2, 0);
       Store_field(ml_oid, 0, ml_objid);
       Store_field(ml_oid, 1, Val_int(var->name_length));
@@ -485,22 +487,16 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
       Store_field(cons, 1, ml_values);
       ml_values = cons;
     }
-  }
-  else
-  {
-    if (status == STAT_SUCCESS)
-    {
+  } else {
+    if (status == STAT_SUCCESS) {
       ml_err = caml_alloc(2, 0);
-      Store_field(ml_err, 0, Val_int(snmp_pdu_error_status_to_ml_variant(response->errstat)));
+      Store_field(ml_err, 0,
+                  Val_int(snmp_pdu_error_status_to_ml_variant(response->errstat)));
       Store_field(ml_err, 1, caml_copy_string(snmp_errstring(response->errstat)));
       netsnmp_raise_ocaml_exception("Netsnmp_response_error", ml_err);
-    }
-    else if (status == STAT_TIMEOUT)
-    {
+    } else if (status == STAT_TIMEOUT) {
       caml_raise_constant(*caml_named_value("Netsnmp_request_timeout"));
-    }
-    else
-    {
+    } else {
       int perror, psnmperr;
       char *perrstr;
 
@@ -514,8 +510,7 @@ CAMLprim value caml_snmp_sess_synch_response(value ml_handle, value ml_pdu)
     }
   }
 
-  if (response)
-  {
+  if (response) {
     caml_release_runtime_system();
     snmp_free_pdu_mutex(response);
     caml_acquire_runtime_system();

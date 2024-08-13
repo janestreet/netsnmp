@@ -54,7 +54,7 @@ let run hostname community =
     (* These are no longer supported on the client side
     |> add_var ".1.3.6.1.4.1.8072.2.99.12.0"
     |> add_var ".1.3.6.1.4.1.8072.2.99.13.0"
-  *)
+    *)
     |> add_var ".1.3.6.1.4.1.8072.2.99.14.0"
     |> add_var ".1.3.6.1.4.1.8072.2.99.15.0"
     |> add_var ".1.3.6.1.4.1.8072.2.99.16.0"
@@ -63,23 +63,21 @@ let run hostname community =
   Printf.eprintf "sysDescr.0 objid_len = %d\n%!" (Netsnmp_raw.Oid.length oid);
   Session.snmp_sess_synch_response sess pdu
   |> List.iter (fun (oid, value) ->
-       Printf.eprintf
-         "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
-         (Mib.snprint_objid oid)
-         (Netsnmp_raw.ASN1_value.type_to_string value)
-         (Netsnmp_raw.ASN1_value.to_string value));
+    Printf.eprintf
+      "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
+      (Mib.snprint_objid oid)
+      (Netsnmp_raw.ASN1_value.type_to_string value)
+      (Netsnmp_raw.ASN1_value.to_string value));
   Printf.eprintf "end list%!\n";
   let pdu = Pdu.snmp_pdu_create Pdu.Pdu_type.Get in
-  let (_ : Pdu.t) = add_var ".1.3.6.1.4.1.8072.2.99.4.0" pdu in
+  let _ : Pdu.t = add_var ".1.3.6.1.4.1.8072.2.99.4.0" pdu in
   Session.snmp_sess_synch_response sess pdu
   |> List.iter (fun (_oid, value) ->
-       match value with
-       | Netsnmp_raw.ASN1_value.ASN_Counter64 count ->
-         Printf.eprintf "Counter64: %08x,%08x\n" count.high count.low
-       | _ ->
-         Printf.eprintf
-           "Unexpected type: %s\n"
-           (Netsnmp_raw.ASN1_value.type_to_string value))
+    match value with
+    | Netsnmp_raw.ASN1_value.ASN_Counter64 count ->
+      Printf.eprintf "Counter64: %08x,%08x\n" count.high count.low
+    | _ ->
+      Printf.eprintf "Unexpected type: %s\n" (Netsnmp_raw.ASN1_value.type_to_string value))
 ;;
 
 let () =

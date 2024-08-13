@@ -8,8 +8,8 @@ let die msg =
 let add_mib_paths paths =
   paths
   |> List.iter (fun path ->
-       let num = Mib.add_mibdir path in
-       Printf.eprintf "mibs(%s) = %d\n%!" path num)
+    let num = Mib.add_mibdir path in
+    Printf.eprintf "mibs(%s) = %d\n%!" path num)
 ;;
 
 let oid_module oidstr =

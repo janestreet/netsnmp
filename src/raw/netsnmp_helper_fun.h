@@ -2,12 +2,16 @@
 #define __NETSNMP_HELPER_FUN_H
 #include <caml/mlvalues.h>
 
-#define p_to_ml_value(p,mlv) \
-  do { mlv = caml_alloc_string(sizeof (void *)); \
-  memmove(Bytes_val(mlv), (char *)&p, sizeof (void *)); } while(0)
+#define p_to_ml_value(p, mlv)                                                            \
+  do {                                                                                   \
+    mlv = caml_alloc_string(sizeof(void *));                                             \
+    memmove(Bytes_val(mlv), (char *)&p, sizeof(void *));                                 \
+  } while (0)
 
-#define ml_value_to_p(mlv,p) \
-  do { memmove((char *)&p, String_val(mlv), sizeof (void *)); } while(0)
+#define ml_value_to_p(mlv, p)                                                            \
+  do {                                                                                   \
+    memmove((char *)&p, String_val(mlv), sizeof(void *));                                \
+  } while (0)
 
 void oom_error(void);
 void netsnmp_raise_ocaml_exception(const char *exn, value msg);

@@ -42,11 +42,11 @@ let run hostname community =
   Printf.eprintf "start list%!\n";
   Session.snmp_sess_synch_response sess pdu
   |> List.iter (fun (oid, value) ->
-       Printf.eprintf
-         "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
-         (Mib.snprint_objid oid)
-         (Netsnmp_raw.ASN1_value.type_to_string value)
-         (Netsnmp_raw.ASN1_value.to_string value));
+    Printf.eprintf
+      "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
+      (Mib.snprint_objid oid)
+      (Netsnmp_raw.ASN1_value.type_to_string value)
+      (Netsnmp_raw.ASN1_value.to_string value));
   Printf.eprintf "end list%!\n"
 ;;
 
