@@ -16,7 +16,7 @@ Building
     Alternatively, depending on the version the following may skip the questions
      ./configure --prefix=$PATH_TO_LOCAL_INSTALL_DIR --with-mib-modules="netSnmpValueTest" \
        --with-default-snmp-version=2c \
-       --with-sys-contact="linux-admin@janestreet.com" \
+       --with-sys-contact="example-email@janestreet.com" \
        --with-sys-location="janestreet" \
        --with-logfile=$PATH_TO_LOCAL_INSTALL_DIR/var/log \
        --with-persistent-directory="$PATH_TO_LOCAL_INSTALL_DIR/var/lib/net-snmp"
