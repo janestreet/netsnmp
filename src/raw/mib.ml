@@ -1,5 +1,5 @@
-(** Netsnmp_mib provides the low level interface to net-snmp's MIB and ASN.1
-    handling functions *)
+(** Netsnmp_mib provides the low level interface to net-snmp's MIB and ASN.1 handling
+    functions *)
 
 (* These map to the corresponding C API functions *)
 
