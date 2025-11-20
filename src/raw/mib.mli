@@ -62,7 +62,7 @@ val fprint_objid : fd:int -> Oid.t -> unit
 val snprint_objid : Oid.t -> string
 
 (* [snprint_description] converts a Oid.t to the textual representation including the
-   additional information from the mib entry.  See snprint_description(3) for more details *)
+   additional information from the mib entry. See snprint_description(3) for more details *)
 val snprint_description : Oid.t -> string
 
 (** [snmp_set_save_descriptions] causes the descriptions in the MIB modules to be loaded

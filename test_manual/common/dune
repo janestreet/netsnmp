@@ -1,0 +1,5 @@
+(library
+ (name netsnmp_test_common)
+ (libraries core netsnmp netsnmp_raw)
+ (preprocess
+  (pps ppx_jane)))

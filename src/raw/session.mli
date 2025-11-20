@@ -5,6 +5,9 @@ type t
 
 val session_id : t -> int
 
+(** idempotent *)
+val netsnmp_init : unit -> unit
+
 (** Supported SNMP versions *)
 module Snmp_version : sig
   type t =
@@ -20,9 +23,15 @@ module Snmp_sec_auth_proto : sig
     | UsmHMACMD5AuthProtocol
 end
 
+(** Supported SNMP security levels for V3 *)
+module Snmp_security_level : sig
+  type t =
+    | NoAuthNoPriv
+    | AuthNoPriv
+end
+
 (** [snmp_sess_open] creates a session between the client and host and returns a handle.
     Raises [Failure] if the C API fails. The parameters are as follows:
-    - [netsnmp_session] - the value returned from snmp_sess_init
     - [version] - snmp version
     - [retries] - Number of retries before timeout.
     - [timeout] - Number of uS until first timeout, then exponential backoff
@@ -30,8 +39,9 @@ end
       port number)
     - [localname] - My Domain name or dotted IP address, "" for default
     - [local_port] - My UDP port number, 0 for default, picked randomly
-    - [community] - V1/V2c community for outgoing requests - ignore by v3.
+    - [community] - V1/V2c community for outgoing requests - ignored by v3.
     - [securityName] - V3 user name
+    - [securityLevel] - V3 security level
     - [securityAuthProto] - V3 auth protocol, this will be converted to the correct oid
     - [securityAuthPassword] - V3 password, will be converted to securityAuthKey *)
 val snmp_sess_open
@@ -43,6 +53,7 @@ val snmp_sess_open
   -> local_port:int
   -> community:string
   -> securityName:string
+  -> securityLevel:Snmp_security_level.t
   -> securityAuthProto:Snmp_sec_auth_proto.t
   -> securityAuthPassword:string
   -> unit

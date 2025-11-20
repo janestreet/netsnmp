@@ -9,19 +9,20 @@ let mibdirs paths =
 ;;
 
 let test paths save_descr =
-  if save_descr
-  then Raw.Mib.snmp_set_save_descriptions true
-  else Deferred.unit >>= fun () -> Raw.Mib.netsnmp_init_mib () >>= fun () -> mibdirs paths
+  let%bind () =
+    if save_descr then Raw.Mib.snmp_set_save_descriptions true else Deferred.unit
+  in
+  let%bind () = Raw.Mib.netsnmp_init_mib () in
+  mibdirs paths
 ;;
 
 let () =
-  Command.async_spec
+  Command.async
     ~summary:"test mib access"
-    Command.Spec.(
-      empty
-      +> flag "-mib-path" (listed string) ~doc:"PATH location of additional mib files"
-      +> flag "-save-descr" no_arg ~doc:" include MIB descriptions")
-    (fun path save_descr () -> test path save_descr)
     ~behave_nicely_in_pipeline:false
+    (let%map_open.Command path =
+       flag "-mib-path" (listed string) ~doc:"PATH location of additional mib files"
+     and save_descr = flag "-save-descr" no_arg ~doc:" include MIB descriptions" in
+     fun () -> test path save_descr)
   |> Command_unix.run
 ;;

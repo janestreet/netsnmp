@@ -16,6 +16,7 @@ module type S = sig
     -> local_port:int
     -> community:string
     -> securityName:string
+    -> securityLevel:Snmp_security_level.t
     -> securityAuthProto:Snmp_sec_auth_proto.t
     -> securityAuthPassword:string
     -> unit
