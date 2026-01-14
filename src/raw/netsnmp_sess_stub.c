@@ -29,6 +29,12 @@
 #define AUTH_PROTO_IGNORE (0)
 #define AUTH_PROTO_USMHMACMD5AUTHPROTOCOL (1)
 
+CAMLprim value caml_netsnmp_init(value unit __attribute__((unused))) {
+  CAMLparam0();
+  init_snmp("netsnmp_ocaml");
+  CAMLreturn(Val_unit);
+}
+
 static long ml_snmp_version_to_c(int v) {
   switch (v) {
   case 0:
@@ -53,27 +59,19 @@ static int ml_snmp_sec_auth_proto_to_c(int v) {
   }
 }
 
+static int ml_snmp_sec_level_to_c(int v) {
+  switch (v) {
+  case 0:
+    return SNMP_SEC_LEVEL_NOAUTH;
+  case 1:
+    return SNMP_SEC_LEVEL_AUTHNOPRIV;
+  default:
+    caml_failwith("unknown snmp security level");
+  }
+}
+
 #define Sess_val(v) (*((netsnmp_session **)Data_custom_val(v)))
 
-static value alloc_sess(netsnmp_session *session) {
-  value v = caml_alloc(1, Abstract_tag);
-  Sess_val(v) = session;
-  return v;
-}
-
-CAMLprim value caml_snmp_sess_init(value unit __attribute__((unused))) {
-  CAMLparam0();
-  CAMLlocal1(ml_session);
-  netsnmp_session *session = (netsnmp_session *)malloc(sizeof(netsnmp_session));
-  if (session == NULL)
-    oom_error();
-
-  caml_release_runtime_system();
-  snmp_sess_init_mutex(session);
-  caml_acquire_runtime_system();
-
-  CAMLreturn(alloc_sess(session));
-}
 
 void free_session(netsnmp_session *session) {
   if (NULL != session->peername)
@@ -106,8 +104,9 @@ CAMLprim value caml_snmp_sess_open(value ml_session_cfg) {
    * ; community            : string               [6]
    * v3
    * ; securityName         : string               [7]
-   * ; securityAuthProto    : snmp_sec_auth_proto  [8]
-   * ; securityAuthPassword : string               [9]
+   * ; securityLevel        : snmp_sec_level       [8]
+   * ; securityAuthProto    : snmp_sec_auth_proto  [9]
+   * ; securityAuthPassword : string               [10]
    */
 
   session = (netsnmp_session *)malloc(sizeof(netsnmp_session));
@@ -153,14 +152,15 @@ CAMLprim value caml_snmp_sess_open(value ml_session_cfg) {
     if (session->securityName == NULL)
       oom_error();
     session->securityNameLen = strlen(session->securityName);
-    switch (ml_snmp_sec_auth_proto_to_c(Field(ml_session_cfg, 8))) {
+    session->securityLevel = ml_snmp_sec_level_to_c(Int_val(Field(ml_session_cfg, 8)));
+    switch (ml_snmp_sec_auth_proto_to_c(Int_val(Field(ml_session_cfg, 9)))) {
     case AUTH_PROTO_IGNORE:
       break;
     case AUTH_PROTO_USMHMACMD5AUTHPROTOCOL:
       session->securityAuthProto = usmHMACMD5AuthProtocol;
       session->securityAuthProtoLen = sizeof(usmHMACMD5AuthProtocol) / sizeof(oid);
       session->securityAuthKeyLen = USM_AUTH_KU_LEN;
-      s = String_val(Field(ml_session_cfg, 9));
+      s = String_val(Field(ml_session_cfg, 10));
       if (generate_Ku(session->securityAuthProto, session->securityAuthProtoLen,
                       (u_char *)s, strlen(s), session->securityAuthKey,
                       &session->securityAuthKeyLen) != SNMPERR_SUCCESS) {

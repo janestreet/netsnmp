@@ -82,12 +82,6 @@ module Netsnmp (IO : IO) : Netsnmp_intf.S with module IO := IO = struct
       ; mutable closed : bool
       }
 
-    let version_auth_to_version = function
-      | Snmp_version_auth.Version_1 _ -> Session.Snmp_version.Version_1
-      | Version_2c _ -> Version_2c
-      | Version_3 _ -> Version_3
-    ;;
-
     let close sess =
       (if not sess.closed then Session.snmp_sess_close sess.session else return ())
       >>= fun () ->
@@ -98,18 +92,47 @@ module Netsnmp (IO : IO) : Netsnmp_intf.S with module IO := IO = struct
     let connect (cinfo : Connection_info.t) =
       Oid.check_init ()
       >>= fun () ->
-      let version = version_auth_to_version cinfo.version_auth in
       let retries = option_default ~default:3 cinfo.retries in
       let timeout = option_default ~default:3_000_000 cinfo.timeout in
       let peername = cinfo.peername in
       let localname = option_default ~default:"" cinfo.localname in
       let local_port = option_default ~default:0 cinfo.local_port in
-      let community, securityName, securityAuthProto, securityAuthPassword =
+      let ( version
+          , `Community community
+          , `Security_name securityName
+          , securityLevel
+          , securityAuthProto
+          , `Security_auth_password securityAuthPassword )
+        =
         match cinfo.version_auth with
-        | Snmp_version_auth.Version_1 auth | Version_2c auth ->
-          auth.community, "", Session.Snmp_sec_auth_proto.Ignore, ""
-        | Version_3 auth ->
-          "", auth.securityName, auth.securityAuthProto, auth.securityAuthPassword
+        | Snmp_version_auth.Version_1 { community } ->
+          ( Session.Snmp_version.Version_1
+          , `Community community
+          , `Security_name ""
+          , Session.Snmp_security_level.NoAuthNoPriv
+          , Session.Snmp_sec_auth_proto.Ignore
+          , `Security_auth_password "" )
+        | Version_2c { community } ->
+          ( Session.Snmp_version.Version_2c
+          , `Community community
+          , `Security_name ""
+          , Session.Snmp_security_level.NoAuthNoPriv
+          , Session.Snmp_sec_auth_proto.Ignore
+          , `Security_auth_password "" )
+        | Version_3 { security_name; auth_protocol = Ignore } ->
+          ( Session.Snmp_version.Version_3
+          , `Community ""
+          , `Security_name security_name
+          , Session.Snmp_security_level.NoAuthNoPriv
+          , Session.Snmp_sec_auth_proto.Ignore
+          , `Security_auth_password "" )
+        | Version_3 { security_name; auth_protocol = MD5 { password } } ->
+          ( Session.Snmp_version.Version_3
+          , `Community ""
+          , `Security_name security_name
+          , Session.Snmp_security_level.AuthNoPriv
+          , Session.Snmp_sec_auth_proto.UsmHMACMD5AuthProtocol
+          , `Security_auth_password password )
       in
       Session.snmp_sess_open
         ~version
@@ -120,6 +143,7 @@ module Netsnmp (IO : IO) : Netsnmp_intf.S with module IO := IO = struct
         ~local_port
         ~community
         ~securityName
+        ~securityLevel
         ~securityAuthProto
         ~securityAuthPassword
         ()

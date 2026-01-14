@@ -1,13 +1,8 @@
+open! Core
 open Netsnmp
 
-let die msg =
-  prerr_endline msg;
-  exit 1
-;;
-
-let run hostname community =
-  let auth = { Netsnmp.Snmp_v1_2c_auth_data.community } in
-  let version_auth = Netsnmp.Snmp_version_auth.Version_2c auth in
+let run hostname version_auth =
+  Netsnmp.Raw.Session.netsnmp_init ();
   let cinfo =
     { Netsnmp.Connection_info.version_auth
     ; peername = hostname
@@ -22,29 +17,34 @@ let run hostname community =
   let result =
     Netsnmp.get_s
       conn
-      [ "sysDescr.0"; "sysDescr.1"; "tcpRtoAlgorithm.0"; "SNMPv2-MIB::sysORID.1" ]
+      [ "sysDescr.0"
+      ; "sysDescr.1"
+      ; "tcpRtoAlgorithm.0"
+      ; "SNMPv2-MIB::sysORID.1"
+      ; "SNMPv2-SMI::enterprises.21239.5.2.1.1.0"
+      ]
   in
-  Printf.eprintf "start list%!\n";
+  print_endline "start list";
   result
-  |> List.iter (fun (oid, value) ->
-    Printf.eprintf
-      "snmp_sess_synch_response: %s -> [%s(%s)]%!\n"
+  |> List.iter ~f:(fun (oid, value) ->
+    printf
+      "snmp_sess_synch_response: %s -> [%s(%s)]\n"
       (Netsnmp.Mib.snprint_objid oid)
       (Netsnmp.ASN1_value.type_to_string value)
       (Netsnmp.ASN1_value.to_string value));
-  Printf.eprintf "end list%!\n";
+  print_endline "end list";
   Netsnmp.Connection.close conn
 ;;
 
 let () =
-  let usage_message = "Usage: netsnmp_test -c community hostname\n" in
-  let hostname = ref None in
-  let set_hostname s = hostname := Some s in
-  let community = ref None in
-  let set_community s = community := Some s in
-  let specs = [ "-c", Arg.String set_community, "SNMP v2c community" ] in
-  Arg.parse specs set_hostname usage_message;
-  match !hostname, !community with
-  | Some hostname, Some community -> run hostname community
-  | _ -> die ("invalid args\n" ^ usage_message ^ "\n")
+  Command.basic
+    ~summary:"test netsnmp connection"
+    (let%map_open.Command { Netsnmp_test_common.Snmp_connection_params.hostname
+                          ; version_auth
+                          }
+       =
+       Netsnmp_test_common.Snmp_connection_params.param
+     in
+     fun () -> run hostname version_auth)
+  |> Command_unix.run
 ;;

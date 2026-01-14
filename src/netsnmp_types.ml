@@ -1,5 +1,8 @@
-open Netsnmp_raw
-module Snmp_sec_auth_proto = Session.Snmp_sec_auth_proto
+module Auth_protocol = struct
+  type t =
+    | Ignore
+    | MD5 of { password : string }
+end
 
 module Snmp_v1_2c_auth_data = struct
   type t = { community : string }
@@ -7,9 +10,8 @@ end
 
 module Snmp_v3_auth_data = struct
   type t =
-    { securityName : string
-    ; securityAuthProto : Snmp_sec_auth_proto.t
-    ; securityAuthPassword : string
+    { security_name : string
+    ; auth_protocol : Auth_protocol.t
     }
 end
 
@@ -22,8 +24,8 @@ module Snmp_version_auth = struct
   let create_v1 community = Version_1 { Snmp_v1_2c_auth_data.community }
   let create_v2c community = Version_2c { Snmp_v1_2c_auth_data.community }
 
-  let create_v3 ~securityName ~securityAuthProto ~securityAuthPassword =
-    Version_3 { Snmp_v3_auth_data.securityName; securityAuthProto; securityAuthPassword }
+  let create_v3 ~security_name ~auth_protocol =
+    Version_3 { Snmp_v3_auth_data.security_name; auth_protocol }
   ;;
 end
 
