@@ -4,4 +4,4 @@
  (libraries netsnmp_raw netsnmp_raw_monad re str)
  (virtual_deps conf-netsnmp)
  (preprocess
-  (pps ppx_jane)))
+  (pps ppx_jane -compare-require-explicit-locality)))
