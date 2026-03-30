@@ -2,4 +2,4 @@
  (name netsnmp_test_common)
  (libraries core netsnmp netsnmp_raw)
  (preprocess
-  (pps ppx_jane)))
+  (pps ppx_jane -compare-require-explicit-locality)))
